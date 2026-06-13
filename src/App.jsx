@@ -558,24 +558,28 @@ function PnLTool(){
     const lossIfHold=-stake;
     const layForGreen=stake*qOpen/qCurr;
     const layRounded=bfRound(layForGreen);
-    const greenProfit=stake*(qOpen-1)*(1-comm)-layRounded*(qCurr-1);
+    // Back vince: ricevi stake*(qOpen-1)*(1-comm), paghi lay*(qCurr-1)
+    const greenIfBackWins=stake*(qOpen-1)*(1-comm)-layRounded*(qCurr-1);
+    // Back perde: ricevi lay*(1-comm), perdi stake
+    const greenIfBackLoses=layRounded*(1-comm)-stake;
     const layPartial=bfRound(layForGreen*0.7);
-    const partialGreenWin=stake*(qOpen-1)*(1-comm)-layPartial*(qCurr-1);
-    const partialGreenLoss=layPartial*(1-comm)-stake;
+    const partialIfBackWins=stake*(qOpen-1)*(1-comm)-layPartial*(qCurr-1);
+    const partialIfBackLoses=layPartial*(1-comm)-stake;
     scenarios=[
-      {label:"Hold completo",icon:"⏳",desc:"Mantieni la posizione fino al fischio",stakeAction:"Nessuna azione",ifWins:winIfHold,ifLoses:lossIfHold,color:C.warn},
-      {label:"Green completo",icon:"✅",desc:"Lay per garantire profitto fisso",stakeAction:`Lay €${f2(layRounded)} @ ${qCurr}`,ifWins:greenProfit,ifLoses:greenProfit,color:C.profit},
-      {label:"Green parziale (70%)",icon:"⚖️",desc:"Garantisci 70% del profitto, tieni qualcosa in gioco",stakeAction:`Lay €${f2(layPartial)} @ ${qCurr}`,ifWins:partialGreenWin,ifLoses:partialGreenLoss,color:C.accent},
+      {label:"Hold completo",icon:"⏳",desc:"Mantieni la posizione fino al fischio finale",stakeAction:"Nessuna azione",ifWins:winIfHold,ifLoses:lossIfHold,color:C.warn},
+      {label:"Green completo",icon:"✅",desc:"Lay per distribuire il profitto su entrambi gli esiti",stakeAction:`Lay €${f2(layRounded)} @ ${qCurr}`,ifWins:greenIfBackWins,ifLoses:greenIfBackLoses,color:C.profit},
+      {label:"Green parziale (70%)",icon:"⚖️",desc:"Garantisci parte del profitto, lascia qualcosa aperto",stakeAction:`Lay €${f2(layPartial)} @ ${qCurr}`,ifWins:partialIfBackWins,ifLoses:partialIfBackLoses,color:C.accent},
     ];
   } else {
     const liability=stake*(qOpen-1);
     const winIfHold=stake*(1-comm);
     const lossIfHold=-liability;
     const backForGreen=bfRound(stake*qOpen/qCurr);
-    const greenProfit=stake*(1-comm)-backForGreen*(qCurr-1)*(1-comm);
+    const greenIfLayWins=stake*(1-comm)-backForGreen*(qCurr-1);
+    const greenIfLayLoses=backForGreen*(1-comm)-liability;
     scenarios=[
-      {label:"Hold completo",icon:"⏳",desc:"Mantieni la posizione fino al fischio",stakeAction:"Nessuna azione",ifWins:winIfHold,ifLoses:lossIfHold,color:C.warn},
-      {label:"Green completo",icon:"✅",desc:"Back per garantire profitto fisso",stakeAction:`Back €${f2(backForGreen)} @ ${qCurr}`,ifWins:greenProfit,ifLoses:greenProfit,color:C.profit},
+      {label:"Hold completo",icon:"⏳",desc:"Mantieni la posizione fino al fischio finale",stakeAction:"Nessuna azione",ifWins:winIfHold,ifLoses:lossIfHold,color:C.warn},
+      {label:"Green completo",icon:"✅",desc:"Back per chiudere la posizione Lay",stakeAction:`Back €${f2(backForGreen)} @ ${qCurr}`,ifWins:greenIfLayWins,ifLoses:greenIfLayLoses,color:C.profit},
     ];
   }
 
