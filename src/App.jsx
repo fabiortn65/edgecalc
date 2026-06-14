@@ -223,59 +223,339 @@ function StrategyPage(){
 /* ══════════════════════════════════════════════════════════════
    2. CS MATRIX
 ══════════════════════════════════════════════════════════════ */
-const CS_GUIDE={steps:[{title:"Trova gli xG",desc:"Cerca medie xG su Understat.com o FBref per le ultime 5-10 partite.",example:"Casa: 0.95 — Ospite: 0.88"},{title:"Inserisci i valori λ",desc:"Lambda = gol attesi per squadra. Più alto = più offensiva.",example:"λ Casa = 0.95, λ Ospite = 0.88"},{title:"Calcola e leggi la heatmap",desc:"Celle più luminose = risultati più probabili. 0-0 evidenziato in giallo."},{title:"Confronta con quote Betfair",desc:"Inserisci la quota Betfair in ogni cella. Edge verde = valore.",example:"Quota 9.40 → edge +2.24%"}],tip:"Cerca λ casa < 1.2 e λ ospite < 1.0 — gare difensive dove il 0-0 ha più probabilità."};
+const CS_GUIDE={steps:[
+  {title:"Trova gli xG delle due squadre",desc:"Cerca le medie xG su Understat.com o FBref. Considera le ultime 5-10 partite. Inserisci anche la form recente W/D/L per affinare il modello.",example:"Casa: 1.1 xG — Ospite: 0.9 xG"},
+  {title:"Inserisci la form recente",desc:"Inserisci i risultati delle ultime 5 partite (W=vittoria D=pareggio L=sconfitta) per entrambe le squadre. Il sistema applica un moltiplicatore ai lambda basato sulla forma.",example:"Casa: W W D L W — Ospite: L D W D L"},
+  {title:"Calcola e analizza la matrice",desc:"La matrice 4x4 rispecchia esattamente i mercati Betfair CS (0-0 fino a 3-3). Clicca → USA su una cella per inviare i dati agli altri tool."},
+  {title:"Controlla Under/Over con le quote reali",desc:"Inserisci le quote Betfair nella sezione Under/Over per vedere l'edge su ogni mercato da 0.5 a 4.5 gol.",example:"Under 2.5 quota 1.85 → edge +3.2%"},
+  {title:"Usa il pannello Live Stats durante la partita",desc:"Inserisci i dati live (tiri, possesso, attacchi pericolosi) per rivalutare la probabilità in tempo reale e ricevere il suggerimento sulla tecnica migliore da usare."}
+],tip:"Combina Form + xG per lambda più precisi. In Live, tiri in porta > 3 per squadra nelle prime 30' indicano partita aperta — considera di rivalutare l'Under."};
 
 function CorrectScoreTool(){
   const{ctx,setCtx}=useApp();
-  const[form,setForm]=useState({lambdaH:ctx.lambdaH||1.5,lambdaA:ctx.lambdaA||1.0});
+  const[form,setForm]=useState({lambdaH:ctx.lambdaH||1.1,lambdaA:ctx.lambdaA||0.9});
   const[matrix,setMatrix]=useState(ctx.csMatrix||null);
   const[odds,setOdds]=useState({});
+  const[ouOdds,setOuOdds]=useState({});
   const[highlighted,setHighlighted]=useState(ctx.selectedScore||null);
-  const MAX=5;
-  const calc=()=>{
-    const m=pMatrix(parseFloat(form.lambdaH),parseFloat(form.lambdaA),MAX);
-    setMatrix(m);
-    setCtx(c=>({...c,lambdaH:parseFloat(form.lambdaH),lambdaA:parseFloat(form.lambdaA),csMatrix:m,selectedScore:null,selectedProb:null,selectedOdds:null,masaOdds:null}));
+  const[formH,setFormH]=useState(["W","D","W","L","W"]);
+  const[formA,setFormA]=useState(["L","D","W","D","L"]);
+  const[liveStats,setLiveStats]=useState({minute:0,shotsH:0,shotsA:0,shotsOnH:0,shotsOnA:0,possH:50,dangerH:0,dangerA:0,scoreH:0,scoreA:0});
+  const[liveMode,setLiveMode]=useState(false);
+  const[activeTab,setActiveTab]=useState("matrix");
+  const MAX=3;
+
+  // Form multiplier: W=1.1, D=1.0, L=0.9, weighted recent
+  const formMult=(arr)=>{
+    const w=[0.35,0.25,0.2,0.12,0.08];
+    const map={W:1.12,D:1.0,L:0.88};
+    return arr.reduce((s,r,i)=>s+(map[r]||1)*w[i],0)/w.reduce((a,b)=>a+b,0);
   };
+
+  const getLambdas=()=>{
+    const mH=formMult(formH),mA=formMult(formA);
+    let lH=parseFloat(form.lambdaH)*mH;
+    let lA=parseFloat(form.lambdaA)*mA;
+    // Live adjustment: shots on target ratio
+    if(liveMode&&parseInt(liveStats.minute)>0){
+      const min=Math.max(1,parseInt(liveStats.minute));
+      const sOH=parseFloat(liveStats.shotsOnH)||0;
+      const sOA=parseFloat(liveStats.shotsOnA)||0;
+      const remaining=(90-min)/90;
+      const liveRateH=(sOH/min)*90*0.35;
+      const liveRateA=(sOA/min)*90*0.35;
+      lH=lH*0.4+liveRateH*0.6;
+      lA=lA*0.4+liveRateA*0.6;
+      // Adjust for current score
+      lH=Math.max(0.1,lH*remaining+(parseFloat(liveStats.scoreH)||0));
+      lA=Math.max(0.1,lA*remaining+(parseFloat(liveStats.scoreA)||0));
+    }
+    return{lH:Math.max(0.1,lH),lA:Math.max(0.1,lA)};
+  };
+
+  const calc=()=>{
+    const{lH,lA}=getLambdas();
+    const m=pMatrix(lH,lA,MAX);
+    setMatrix(m);
+    setCtx(c=>({...c,lambdaH:lH,lambdaA:lA,csMatrix:m,selectedScore:null,selectedProb:null,selectedOdds:null,masaOdds:null}));
+  };
+
   const selectCell=(h,a,prob,oddVal)=>{
     setHighlighted({h,a});
     const q=oddVal?parseFloat(oddVal):null;
     setCtx(c=>({...c,selectedScore:{h,a},selectedProb:prob,selectedOdds:q,masaOdds:q,pnlOpenOdds:q}));
   };
-  const scores=[];for(let h=0;h<=MAX;h++)for(let a=0;a<=MAX;a++)scores.push([h,a]);
+
+  const scores=[];
+  for(let h=0;h<=MAX;h++)for(let a=0;a<=MAX;a++)scores.push([h,a]);
   const getEdge=(h,a)=>{if(!matrix||!odds[`${h}-${a}`])return null;return(matrix[h][a]-1/parseFloat(odds[`${h}-${a}`]))*100;};
-  const sorted=matrix?[...scores].sort((a,b)=>matrix[b[0]][b[1]]-matrix[a[0]][a[1]]).slice(0,10):[];
+  const getOUEdge=(line,type)=>{
+    if(!matrix||!ouOdds[`${type}${line}`])return null;
+    const total=scores.reduce((s,[h,a])=>{
+      const g=h+a;
+      return s+(type==="U"?g<line:g>=line?matrix[h][a]:0);
+    },0);
+    return(total-1/parseFloat(ouOdds[`${type}${line}`]))*100;
+  };
+  const getOUProb=(line,type)=>!matrix?0:scores.reduce((s,[h,a])=>s+(type==="U"?h+a<line:h+a>=line?matrix[h][a]:0),0);
+
+  const sorted=matrix?[...scores].sort((a,b)=>matrix[b[0]][b[1]]-matrix[a[0]][a[1]]).slice(0,6):[];
+
+  // Live suggestion logic
+  const getLiveSuggestion=()=>{
+    const min=parseInt(liveStats.minute)||0;
+    const sOH=parseFloat(liveStats.shotsOnH)||0;
+    const sOA=parseFloat(liveStats.shotsOnA)||0;
+    const poss=parseFloat(liveStats.possH)||50;
+    const danH=parseFloat(liveStats.dangerH)||0;
+    const danA=parseFloat(liveStats.dangerA)||0;
+    const score=`${liveStats.scoreH}-${liveStats.scoreA}`;
+    const totalShots=sOH+sOA;
+    const isLow=totalShots<3&&danH+danA<4;
+    const isHigh=totalShots>5||danH+danA>8;
+    const is00=score==="0-0";
+
+    if(min<30){
+      if(isLow&&is00)return{tech:"CS 0-0 Back",conf:"Alta",color:C.profit,reason:"Partita bloccata nei primi 30' — poche occasioni, ritmo difensivo. Ottimo per mantenere o aprire CS 0-0."};
+      if(isHigh)return{tech:"Over 2.5 Back",conf:"Media",color:C.warn,reason:"Molti tiri e attacchi pericolosi nelle prime fasi — la partita sembra aperta. Valuta Over 2.5."};
+      return{tech:"Attendi",conf:"–",color:C.textSec,reason:"Dati insufficienti per una raccomandazione affidabile. Aspetta almeno il 30'."};
+    }
+    if(min>=30&&min<60){
+      if(is00&&isLow)return{tech:"CS 0-0 + Under 2.5",conf:"Alta",color:C.profit,reason:"0-0 al "+min+"' con poche occasioni. Combo ideale: mantieni CS 0-0 e aggiungi Under 2.5 Live."};
+      if(is00&&isHigh)return{tech:"Under 2.5 Lay / Over Back",conf:"Media",color:C.warn,reason:"0-0 al "+min+"' ma molti tiri. Il gol potrebbe arrivare — considera Lay Under 2.5 o Over Back."};
+      if(!is00)return{tech:"P&L Simulator",conf:"Alta",color:C.accent,reason:"Risultato cambiato. Vai al P&L Simulator per calcolare il green o la gestione della posizione aperta."};
+    }
+    if(min>=60){
+      if(is00&&isLow)return{tech:"CS 0-0 Hold + Under 2.5",conf:"Molto Alta",color:C.profit,reason:"0-0 al "+min+"' — momento d'oro. Massimizza: tieni CS 0-0 e aggiungi Under 2.5. Quote in calo = profitto in crescita."};
+      if(is00&&isHigh)return{tech:"Green parziale",conf:"Alta",color:C.warn,reason:"0-0 al "+min+"' ma pressione alta. Usa P&L Simulator per garantire il 60-70% del profitto già realizzato."};
+      if(!is00)return{tech:"P&L Simulator",conf:"Alta",color:C.accent,reason:"Vai al P&L Simulator — la posizione CS 0-0 è persa o a rischio, calcola la gestione ottimale."};
+    }
+    return{tech:"Nessuna raccomandazione",conf:"–",color:C.textDim,reason:"Inserisci i dati live per ricevere un suggerimento."};
+  };
+
+  const tabs=[{id:"matrix",label:"Matrice CS"},{id:"ou",label:"Under / Over"},{id:"live",label:"⚡ Live Stats"}];
+
   return(
     <div style={{position:"relative",zIndex:1}}>
-      <PageHeader icon={<IconCS/>} title="Correct Score Matrix" sub="Probabilità Poisson bivariata — confronto con quote Betfair Exchange"/>
+      <PageHeader icon={<IconCS/>} title="Correct Score Matrix" sub="Probabilità Poisson — matrice 4x4 Betfair + Under/Over + Live Stats"/>
+      {ctx.selectedScore&&(<div style={{display:"flex",alignItems:"center",gap:10,marginBottom:16,padding:"8px 12px",background:`${C.profit}0A`,border:`1px solid ${C.profit}30`,borderRadius:6}}><span style={{fontSize:14}}>✓</span><div style={{fontSize:12,color:C.profit,fontWeight:600}}>Risultato <span style={{fontFamily:"monospace"}}>{ctx.selectedScore.h}-{ctx.selectedScore.a}</span> selezionato — prob <span style={{fontFamily:"monospace"}}>{pct(ctx.selectedProb)}</span>{ctx.selectedOdds&&<span> · quota <span style={{fontFamily:"monospace"}}>{ctx.selectedOdds}</span></span>} · dati propagati a tutti i tool</div></div>)}
       <GuidePanel {...CS_GUIDE}/>
-      <div style={{display:"grid",gridTemplateColumns:matrix?"1fr 1fr 1fr":"1fr",gap:16,marginBottom:16}}>
+
+      {/* Input + Form */}
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:16}}>
         <div style={{...card,borderColor:C.borderBright}} className="ec-card">
           <div style={cardDeco(C.accent)}/>
-          <div style={{fontSize:11,color:C.textDim,letterSpacing:2,textTransform:"uppercase",marginBottom:16}}>Parametri</div>
-          {[["xG Casa (λ)","lambdaH"],["xG Ospite (λ)","lambdaA"]].map(([lbl,key])=>(<div key={key}><label style={{fontSize:12,color:C.textSec,marginBottom:5,display:"block"}}>{lbl}</label><input className="ec-input" style={inputStyle} type="number" step="0.1" value={form[key]} onChange={e=>setForm(f=>({...f,[key]:e.target.value}))}/></div>))}
-          <button className="ec-btn" onClick={calc} style={btnStyle()}>Calcola Matrice →</button>
+          <div style={{fontSize:11,color:C.textDim,letterSpacing:2,textTransform:"uppercase",marginBottom:14}}>Parametri attacco</div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
+            {[["xG Casa (λ)","lambdaH"],["xG Ospite (λ)","lambdaA"]].map(([lbl,key])=>(<div key={key}><label style={{fontSize:12,color:C.textSec,marginBottom:5,display:"block"}}>{lbl}</label><input className="ec-input" style={inputStyle} type="number" step="0.1" value={form[key]} onChange={e=>setForm(f=>({...f,[key]:e.target.value}))}/></div>))}
+          </div>
+          <div style={{fontSize:11,color:C.textDim,letterSpacing:1.5,textTransform:"uppercase",marginBottom:8}}>Form recente (click per cambiare)</div>
+          {[["Casa",formH,setFormH],["Ospite",formA,setFormA]].map(([lbl,arr,setArr])=>(
+            <div key={lbl} style={{marginBottom:10}}>
+              <div style={{fontSize:11,color:C.textSec,marginBottom:5}}>{lbl} — ultime 5 partite</div>
+              <div style={{display:"flex",gap:5}}>
+                {arr.map((r,i)=>{
+                  const col=r==="W"?C.profit:r==="D"?C.warn:C.loss;
+                  return(<button key={i} onClick={()=>{const cycle={W:"D",D:"L",L:"W"};const n=[...arr];n[i]=cycle[r];setArr(n);}} style={{width:32,height:32,borderRadius:5,background:`${col}20`,border:`1px solid ${col}50`,color:col,fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"monospace"}}>{r}</button>);
+                })}
+              </div>
+            </div>
+          ))}
+          <div style={{fontSize:11,color:C.textDim,marginBottom:8,padding:"6px 10px",background:"#050D1A",borderRadius:5}}>
+            λ aggiustata: <span style={{color:C.accent,fontFamily:"monospace"}}>{getLambdas().lH.toFixed(2)}</span> vs <span style={{color:C.accent,fontFamily:"monospace"}}>{getLambdas().lA.toFixed(2)}</span>
+          </div>
+          <button className="ec-btn" onClick={calc} style={btnStyle()}>Calcola →</button>
         </div>
-        {matrix&&(<>
-          <div style={card} className="ec-card">
-            <div style={cardDeco(C.warn)}/>
-            <div style={{fontSize:11,color:C.textDim,letterSpacing:2,textTransform:"uppercase",marginBottom:14}}>Probabilità aggregate</div>
-            {[["🏠 Casa vince",scores.filter(([h,a])=>h>a).reduce((s,[h,a])=>s+matrix[h][a],0),C.text],["➖ Pareggio",scores.filter(([h,a])=>h===a).reduce((s,[h,a])=>s+matrix[h][a],0),C.text],["✈️ Ospite vince",scores.filter(([h,a])=>h<a).reduce((s,[h,a])=>s+matrix[h][a],0),C.text],["📉 Under 2.5",scores.filter(([h,a])=>h+a<3).reduce((s,[h,a])=>s+matrix[h][a],0),C.textSec],["📈 Over 2.5",scores.filter(([h,a])=>h+a>=3).reduce((s,[h,a])=>s+matrix[h][a],0),C.textSec],["⭐ 0-0 (CS)",matrix[0][0],C.warn]].map(([lbl,prob,col])=>(<div key={lbl} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"7px 0",borderBottom:`1px solid ${C.border}25`}}><span style={{color:C.textSec,fontSize:12}}>{lbl}</span><div><span style={{fontFamily:"monospace",color:col,fontWeight:600}}>{pct(prob)}</span><span style={{color:C.textDim,fontSize:11,marginLeft:6}}>({f2(1/prob)})</span></div></div>))}
+
+        {matrix&&(
+          <div style={{display:"flex",flexDirection:"column",gap:10}}>
+            <div style={card} className="ec-card">
+              <div style={cardDeco(C.warn)}/>
+              <div style={{fontSize:11,color:C.textDim,letterSpacing:2,textTransform:"uppercase",marginBottom:12}}>Probabilità aggregate</div>
+              {[["🏠 Casa",scores.filter(([h,a])=>h>a).reduce((s,[h,a])=>s+matrix[h][a],0),C.text],["➖ Pareggio",scores.filter(([h,a])=>h===a).reduce((s,[h,a])=>s+matrix[h][a],0),C.text],["✈️ Ospite",scores.filter(([h,a])=>h<a).reduce((s,[h,a])=>s+matrix[h][a],0),C.text],["📉 Under 2.5",getOUProb(3,"U"),C.textSec],["📈 Over 2.5",getOUProb(3,"O"),C.textSec],["⭐ CS 0-0",matrix[0][0],C.warn]].map(([lbl,prob,col])=>(<div key={lbl} style={{display:"flex",justifyContent:"space-between",padding:"5px 0",borderBottom:`1px solid ${C.border}20`}}><span style={{color:C.textSec,fontSize:12}}>{lbl}</span><div><span style={{fontFamily:"monospace",color:col,fontWeight:600}}>{pct(prob)}</span><span style={{color:C.textDim,fontSize:11,marginLeft:5}}>({f2(1/prob)})</span></div></div>))}
+            </div>
+            <div style={card} className="ec-card">
+              <div style={cardDeco(C.profit)}/>
+              <div style={{fontSize:11,color:C.textDim,letterSpacing:2,textTransform:"uppercase",marginBottom:10}}>Top 6 risultati</div>
+              {sorted.map(([h,a])=>{const prob=matrix[h][a];const edge=getEdge(h,a);const w=Math.min(prob/matrix[sorted[0][0]][sorted[0][1]]*100,100);return(<div key={`${h}-${a}`} style={{marginBottom:7}}><div style={{display:"flex",alignItems:"center",gap:7,marginBottom:2}}><span style={{minWidth:28,padding:"1px 5px",background:`${C.accent}20`,color:C.accent,borderRadius:3,fontSize:11,fontWeight:700,fontFamily:"monospace",textAlign:"center"}}>{h}-{a}</span><div style={{flex:1,height:4,background:C.border,borderRadius:2,overflow:"hidden"}}><div style={{height:4,width:`${w}%`,background:`linear-gradient(90deg,${C.accent},${C.profit})`,borderRadius:2}}/></div><span style={{fontFamily:"monospace",fontSize:11,minWidth:36}}>{pct(prob)}</span>{edge!==null&&<span style={{padding:"1px 5px",background:edge>0?`${C.profit}20`:`${C.loss}20`,color:edge>0?C.profit:C.loss,borderRadius:3,fontSize:10,fontFamily:"monospace",minWidth:44,textAlign:"center"}}>{edge>0?"+":""}{edge.toFixed(1)}%</span>}</div></div>);})}
+            </div>
           </div>
-          <div style={card} className="ec-card">
-            <div style={cardDeco(C.profit)}/>
-            <div style={{fontSize:11,color:C.textDim,letterSpacing:2,textTransform:"uppercase",marginBottom:12}}>Top 10 risultati</div>
-            {sorted.map(([h,a])=>{const prob=matrix[h][a];const edge=getEdge(h,a);const w=Math.min(prob/matrix[sorted[0][0]][sorted[0][1]]*100,100);return(<div key={`${h}-${a}`} style={{marginBottom:8}}><div style={{display:"flex",alignItems:"center",gap:8,marginBottom:3}}><span style={{minWidth:28,padding:"1px 5px",background:`${C.accent}20`,color:C.accent,borderRadius:3,fontSize:11,fontWeight:700,fontFamily:"monospace",textAlign:"center"}}>{h}-{a}</span><div style={{flex:1,height:5,background:C.border,borderRadius:3,overflow:"hidden"}}><div style={{height:5,width:`${w}%`,background:`linear-gradient(90deg,${C.accent},${C.profit})`,borderRadius:3}}/></div><span style={{fontFamily:"monospace",fontSize:12,minWidth:38}}>{pct(prob)}</span>{edge!==null&&<span style={{padding:"1px 5px",background:edge>0?`${C.profit}20`:`${C.loss}20`,color:edge>0?C.profit:C.loss,borderRadius:3,fontSize:10,fontFamily:"monospace",minWidth:46,textAlign:"center"}}>{edge>0?"+":""}{edge.toFixed(1)}%</span>}</div></div>);})}
-          </div>
-        </>)}
+        )}
       </div>
-      {matrix&&(<div style={card} className="ec-card">
-    {ctx.selectedScore&&(<div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14,padding:"8px 12px",background:`${C.profit}0A`,border:`1px solid ${C.profit}30`,borderRadius:6}}><span style={{fontSize:14}}>✓</span><div style={{fontSize:12,color:C.profit,fontWeight:600}}>Risultato <span style={{fontFamily:"monospace"}}>{ctx.selectedScore.h}-{ctx.selectedScore.a}</span> selezionato — prob <span style={{fontFamily:"monospace"}}>{pct(ctx.selectedProb)}</span>{ctx.selectedOdds&&<span> · quota <span style={{fontFamily:"monospace"}}>{ctx.selectedOdds}</span></span>} · dati inviati a Value Finder, Kelly e Masaniello</div></div>)}
-    <div style={{fontSize:11,color:C.textDim,letterSpacing:2,textTransform:"uppercase",marginBottom:14}}>Heatmap — clicca "Seleziona" su una cella per inviare i dati agli altri tool</div><div style={{overflowX:"auto"}}><table style={{borderCollapse:"separate",borderSpacing:3}}><thead><tr><th style={{padding:"4px 8px",fontSize:10,color:C.textDim,textAlign:"center"}}>C\O</th>{Array.from({length:MAX+1},(_,i)=><th key={i} style={{padding:"4px 8px",fontSize:11,color:C.textSec,textAlign:"center",minWidth:82}}>{i}</th>)}</tr></thead><tbody>{Array.from({length:MAX+1},(_,h)=>(<tr key={h}><td style={{padding:"4px 8px",fontSize:11,color:C.textSec,fontWeight:600,textAlign:"center"}}>{h}</td>{Array.from({length:MAX+1},(_,a)=>{const prob=matrix[h][a];const edge=getEdge(h,a);const intensity=Math.min(prob*8,.85);const isZZ=h===0&&a===0;const bg=isZZ?`rgba(255,184,0,${intensity+.1})`:`rgba(0,194,255,${intensity})`;const bord=isZZ?`1px solid rgba(255,184,0,${intensity*.7+.1})`:`1px solid rgba(0,194,255,${intensity*.5+.05})`;return(<td key={a} style={{padding:2}}><div style={{background:bg,border:bord,borderRadius:6,padding:"5px 4px",textAlign:"center",minWidth:78}}><div style={{fontFamily:"monospace",fontSize:11,fontWeight:600,color:intensity>0.55?"#040C1A":C.text}}>{pct(prob)}</div>
-                            <input placeholder="quota" value={odds[`${h}-${a}`]||""} onChange={e=>{const v=e.target.value;setOdds(o=>({...o,[`${h}-${a}`]:v}));if(highlighted&&highlighted.h===h&&highlighted.a===a)selectCell(h,a,prob,v);}} style={{width:56,fontSize:10,background:"rgba(0,0,0,0.35)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:3,color:"#fff",padding:"2px 4px",textAlign:"center",fontFamily:"monospace",outline:"none",marginTop:2,boxSizing:"border-box"}}/>
-                            {edge!==null&&<div style={{fontSize:10,color:edge>0?C.profit:C.loss,fontFamily:"monospace",fontWeight:700,marginTop:1}}>{edge>0?"+":""}{edge.toFixed(1)}%</div>}
-                            <button onClick={()=>selectCell(h,a,prob,odds[`${h}-${a}`])} title="Invia dati a Value Finder, Kelly e Masaniello" style={{marginTop:2,width:"100%",background:highlighted&&highlighted.h===h&&highlighted.a===a?`${C.profit}25`:"rgba(0,194,255,0.08)",border:`1px solid ${highlighted&&highlighted.h===h&&highlighted.a===a?C.profit:"rgba(0,194,255,0.15)"}`,borderRadius:3,color:highlighted&&highlighted.h===h&&highlighted.a===a?C.profit:C.accent,fontSize:9,cursor:"pointer",padding:"2px 0",fontFamily:"inherit",fontWeight:700,letterSpacing:.5}}>{highlighted&&highlighted.h===h&&highlighted.a===a?"✓ ATTIVO":"→ USA"}</button>
-                          </div></td>);})}</tr>))}</tbody></table></div></div>)}
+
+      {/* Tabs */}
+      {matrix&&(<>
+        <div style={{display:"flex",gap:8,marginBottom:16}}>
+          {tabs.map(t=>(<button key={t.id} onClick={()=>setActiveTab(t.id)} style={{padding:"7px 16px",borderRadius:6,border:`1px solid ${activeTab===t.id?C.accent:C.border}`,background:activeTab===t.id?`${C.accent}18`:"transparent",color:activeTab===t.id?C.accent:C.textSec,fontSize:13,fontWeight:activeTab===t.id?700:400,cursor:"pointer",fontFamily:"inherit",transition:"all .15s"}}>{t.label}</button>))}
+        </div>
+
+        {/* TAB 1: CS MATRIX 4x4 */}
+        {activeTab==="matrix"&&(
+          <div style={card} className="ec-card">
+            <div style={{fontSize:11,color:C.textDim,letterSpacing:2,textTransform:"uppercase",marginBottom:6}}>Matrice Correct Score — 0-0 → 3-3 (mercati Betfair)</div>
+            <div style={{fontSize:11,color:C.textSec,marginBottom:14}}>Inserisci la quota Betfair in ogni cella, poi clicca <strong style={{color:C.accent}}>→ USA</strong> per propagare i dati a tutti i tool</div>
+            <div style={{overflowX:"auto"}}>
+              <table style={{borderCollapse:"separate",borderSpacing:4}}>
+                <thead><tr>
+                  <th style={{padding:"4px 10px",fontSize:10,color:C.textDim,textAlign:"center",minWidth:50}}>Casa↓ Osp→</th>
+                  {Array.from({length:MAX+1},(_,i)=><th key={i} style={{padding:"4px 8px",fontSize:12,color:C.textSec,textAlign:"center",minWidth:90,fontFamily:"monospace"}}>{i}</th>)}
+                </tr></thead>
+                <tbody>
+                  {Array.from({length:MAX+1},(_,h)=>(
+                    <tr key={h}>
+                      <td style={{padding:"4px 10px",fontSize:12,color:C.textSec,fontWeight:700,textAlign:"center",fontFamily:"monospace"}}>{h}</td>
+                      {Array.from({length:MAX+1},(_,a)=>{
+                        const prob=matrix[h][a];
+                        const edge=getEdge(h,a);
+                        const intensity=Math.min(prob*9,.9);
+                        const isZZ=h===0&&a===0;
+                        const isHL=highlighted&&highlighted.h===h&&highlighted.a===a;
+                        const bg=isHL?`rgba(0,255,157,0.2)`:isZZ?`rgba(255,184,0,${intensity+.1})`:`rgba(0,194,255,${intensity})`;
+                        const bord=isHL?`2px solid ${C.profit}`:isZZ?`1px solid rgba(255,184,0,${intensity*.7+.1})`:`1px solid rgba(0,194,255,${intensity*.5+.05})`;
+                        return(
+                          <td key={a} style={{padding:3}}>
+                            <div style={{background:bg,border:bord,borderRadius:7,padding:"6px 4px",textAlign:"center",minWidth:86,transition:"all .2s"}}>
+                              <div style={{fontFamily:"monospace",fontSize:12,fontWeight:700,color:intensity>0.55&&!isHL?"#040C1A":C.text}}>{pct(prob)}</div>
+                              <input placeholder="quota BF" value={odds[`${h}-${a}`]||""} onChange={e=>{const v=e.target.value;setOdds(o=>({...o,[`${h}-${a}`]:v}));if(isHL)selectCell(h,a,prob,v);}}
+                                style={{width:62,fontSize:10,background:"rgba(0,0,0,0.3)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:3,color:"#fff",padding:"2px 4px",textAlign:"center",fontFamily:"monospace",outline:"none",marginTop:3,boxSizing:"border-box"}}/>
+                              {edge!==null&&<div style={{fontSize:10,color:edge>0?C.profit:C.loss,fontFamily:"monospace",fontWeight:700,marginTop:2}}>{edge>0?"+":""}{edge.toFixed(1)}%</div>}
+                              <button onClick={()=>selectCell(h,a,prob,odds[`${h}-${a}`])}
+                                style={{marginTop:3,width:"100%",background:isHL?`${C.profit}30`:"rgba(0,194,255,0.08)",border:`1px solid ${isHL?C.profit:"rgba(0,194,255,0.2)"}`,borderRadius:3,color:isHL?C.profit:C.accent,fontSize:9,cursor:"pointer",padding:"2px 0",fontFamily:"inherit",fontWeight:700}}>
+                                {isHL?"✓ ATTIVO":"→ USA"}
+                              </button>
+                            </div>
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 2: UNDER/OVER */}
+        {activeTab==="ou"&&(
+          <div style={card} className="ec-card">
+            <div style={{fontSize:11,color:C.textDim,letterSpacing:2,textTransform:"uppercase",marginBottom:14}}>Under / Over — inserisci quote Betfair per l'edge automatico</div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:10}}>
+              {[0.5,1.5,2.5,3.5,4.5].map(line=>{
+                const probU=getOUProb(line,"U");
+                const probO=getOUProb(line,"O");
+                const edgeU=getOUEdge(line,"U");
+                const edgeO=getOUEdge(line,"O");
+                return(
+                  <div key={line} style={{background:"#050D1A",border:`1px solid ${C.border}`,borderRadius:8,padding:"12px 10px"}}>
+                    <div style={{fontFamily:"monospace",fontSize:13,fontWeight:700,color:C.accent,textAlign:"center",marginBottom:10}}>{line} Gol</div>
+                    {[["Under",probU,edgeU,"U"],["Over",probO,edgeO,"O"]].map(([lbl,prob,edge,type])=>(
+                      <div key={lbl} style={{marginBottom:10}}>
+                        <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
+                          <span style={{fontSize:11,color:C.textSec}}>{lbl}</span>
+                          <span style={{fontFamily:"monospace",fontSize:11,color:C.text,fontWeight:600}}>{pct(prob)}</span>
+                        </div>
+                        <div style={{height:3,background:C.border,borderRadius:2,marginBottom:5}}><div style={{height:3,width:pct(prob),background:type==="U"?C.accent:C.purple,borderRadius:2}}/></div>
+                        <div style={{fontSize:10,color:C.textDim,marginBottom:3}}>Fair: {f2(1/prob)}</div>
+                        <input placeholder="Quota BF" value={ouOdds[`${type}${line}`]||""} onChange={e=>setOuOdds(o=>({...o,[`${type}${line}`]:e.target.value}))}
+                          style={{width:"100%",fontSize:11,background:"#07101F",border:`1px solid ${edge!==null&&edge>0?C.profit:C.border}`,borderRadius:4,color:"#fff",padding:"4px 6px",textAlign:"center",fontFamily:"monospace",outline:"none",boxSizing:"border-box",marginBottom:4}}/>
+                        {edge!==null&&(
+                          <div style={{textAlign:"center",padding:"3px 0",background:edge>0?`${C.profit}15`:`${C.loss}15`,border:`1px solid ${edge>0?C.profit:C.loss}30`,borderRadius:4}}>
+                            <span style={{fontFamily:"monospace",fontSize:11,fontWeight:700,color:edge>0?C.profit:C.loss}}>{edge>0?"+":""}{edge.toFixed(2)}%</span>
+                            <span style={{fontSize:9,color:C.textDim,marginLeft:4}}>{edge>0?"VALUE":"no edge"}</span>
+                          </div>
+                        )}
+                        {edge!==null&&edge>0&&(
+                          <button onClick={()=>setCtx(c=>({...c,selectedOdds:parseFloat(ouOdds[`${type}${line}`]),selectedProb:prob,masaOdds:parseFloat(ouOdds[`${type}${line}`]),selectedScore:null}))}
+                            style={{width:"100%",marginTop:4,background:`${C.accent}15`,border:`1px solid ${C.accent}40`,color:C.accent,borderRadius:4,padding:"3px 0",fontSize:9,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>→ USA nei tool</button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* TAB 3: LIVE STATS */}
+        {activeTab==="live"&&(
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
+            <div style={{...card,borderColor:`${C.warn}44`}} className="ec-card">
+              <div style={cardDeco(C.warn)}/>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+                <div style={{fontSize:11,color:C.textDim,letterSpacing:2,textTransform:"uppercase"}}>Dati Live Partita</div>
+                <div style={{display:"flex",gap:6,alignItems:"center"}}>
+                  <div style={{width:8,height:8,borderRadius:"50%",background:C.loss,boxShadow:`0 0 6px ${C.loss}`,animation:"pulseGlow 1s infinite"}}/>
+                  <span style={{fontSize:11,color:C.loss,fontWeight:600}}>LIVE</span>
+                </div>
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:12}}>
+                {[["Minuto","minute","1","⏱"],["Gol Casa","scoreH","1","⚽"],["Gol Ospite","scoreA","1","⚽"]].map(([lbl,key,step,icon])=>(
+                  <div key={key}>
+                    <label style={{fontSize:10,color:C.textSec,marginBottom:4,display:"block"}}>{icon} {lbl}</label>
+                    <input className="ec-input" style={{...inputStyle,marginBottom:0,textAlign:"center",fontSize:16,fontWeight:700,color:C.warn}} type="number" step={step} value={liveStats[key]} onChange={e=>setLiveStats(s=>({...s,[key]:e.target.value}))}/>
+                  </div>
+                ))}
+              </div>
+              <div style={{fontSize:11,color:C.textDim,letterSpacing:1,textTransform:"uppercase",marginBottom:8}}>Statistiche</div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+                {[["Tiri Casa","shotsH"],["Tiri Ospite","shotsA"],["Tiri in porta Casa","shotsOnH"],["Tiri in porta Ospite","shotsOnA"],["Possesso Casa (%)","possH"],["Attacchi pericolosi Casa","dangerH"],["","dangerA_label"],["Attacchi pericolosi Ospite","dangerA"]].filter(x=>x[1]!=="dangerA_label").map(([lbl,key])=>(
+                  <div key={key}>
+                    <label style={{fontSize:10,color:C.textSec,marginBottom:3,display:"block"}}>{lbl}</label>
+                    <input className="ec-input" style={{...inputStyle,marginBottom:0}} type="number" step="1" value={liveStats[key]} onChange={e=>setLiveStats(s=>({...s,[key]:e.target.value}))}/>
+                  </div>
+                ))}
+              </div>
+              <button className="ec-btn" onClick={calc} style={{...btnStyle(C.warn),marginTop:12}}>Ricalcola con dati live →</button>
+            </div>
+
+            <div style={{display:"flex",flexDirection:"column",gap:12}}>
+              {/* Suggestion */}
+              {(()=>{
+                const sug=getLiveSuggestion();
+                return(
+                  <div style={{...card,border:`2px solid ${sug.color}`,background:`linear-gradient(135deg,#0D1E3A,#090F1E)`}} className="ec-card">
+                    <div style={cardDeco(sug.color)}/>
+                    <div style={{fontSize:11,color:C.textDim,letterSpacing:2,textTransform:"uppercase",marginBottom:8}}>Tecnica consigliata</div>
+                    <div style={{fontSize:22,fontFamily:"'JetBrains Mono',monospace",fontWeight:700,color:sug.color,textShadow:`0 0 15px ${sug.color}50`,marginBottom:6}}>{sug.tech}</div>
+                    <div style={{display:"inline-block",padding:"2px 8px",background:`${sug.color}15`,border:`1px solid ${sug.color}30`,borderRadius:4,fontSize:11,color:sug.color,fontFamily:"monospace",marginBottom:10}}>Confidenza: {sug.conf}</div>
+                    <div style={{fontSize:13,color:C.textSec,lineHeight:1.7}}>{sug.reason}</div>
+                  </div>
+                );
+              })()}
+
+              {/* Live lambda recap */}
+              <div style={card} className="ec-card">
+                <div style={cardDeco(C.accent)}/>
+                <div style={{fontSize:11,color:C.textDim,letterSpacing:2,textTransform:"uppercase",marginBottom:12}}>Lambda live aggiornati</div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+                  {[["λ Casa (orig.)",parseFloat(form.lambdaH).toFixed(2),C.textSec],["λ Ospite (orig.)",parseFloat(form.lambdaA).toFixed(2),C.textSec],["λ Casa (live)",getLambdas().lH.toFixed(2),C.accent],["λ Ospite (live)",getLambdas().lA.toFixed(2),C.accent]].map(([lbl,val,col])=>(
+                    <div key={lbl} style={{background:"#050D1A",border:`1px solid ${C.border}`,borderRadius:6,padding:"8px 10px"}}>
+                      <div style={{fontSize:10,color:C.textDim,marginBottom:2}}>{lbl}</div>
+                      <div style={{fontFamily:"monospace",fontSize:16,fontWeight:700,color:col}}>{val}</div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{marginTop:10,fontSize:12,color:C.textSec,lineHeight:1.6,padding:"8px 10px",background:"#050D1A",borderRadius:5}}>
+                  I lambda live combinano i dati storici (40%) con il ritmo di tiri del match (60%) proiettati sui minuti rimanenti.
+                </div>
+              </div>
+
+              {/* Possession bar */}
+              <div style={card} className="ec-card">
+                <div style={{fontSize:11,color:C.textDim,letterSpacing:2,textTransform:"uppercase",marginBottom:10}}>Possesso palla</div>
+                <div style={{height:20,background:C.border,borderRadius:10,overflow:"hidden",position:"relative"}}>
+                  <div style={{height:"100%",width:`${liveStats.possH}%`,background:`linear-gradient(90deg,${C.accent},${C.accentGlow})`,borderRadius:10,transition:"width .4s ease"}}/>
+                </div>
+                <div style={{display:"flex",justifyContent:"space-between",marginTop:5}}>
+                  <span style={{fontFamily:"monospace",fontSize:12,color:C.accent,fontWeight:700}}>Casa {liveStats.possH}%</span>
+                  <span style={{fontFamily:"monospace",fontSize:12,color:C.purple,fontWeight:700}}>Ospite {100-parseInt(liveStats.possH||50)}%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </>)}
     </div>
   );
 }
