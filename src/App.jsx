@@ -1,4 +1,3 @@
-import { useState } from "react";
 
 /* ─── TOKENS ─────────────────────────────────────────────────── */
 const C = {
@@ -11,6 +10,31 @@ const C = {
   purple:"#A78BFA", orange:"#FB923C",
   text:"#E8F4FF", textSec:"#6A90B8", textDim:"#334D6E",
   guideB:"#081510", guideBor:"#1A4A2A",
+};
+
+/* ─── GLOBAL CONTEXT ─────────────────────────────────────────── */
+import { useState, createContext, useContext } from "react";
+
+const AppCtx = createContext(null);
+const useApp = () => useContext(AppCtx);
+
+const defaultCtx = {
+  // CS Matrix outputs
+  lambdaH: "", lambdaA: "",
+  csMatrix: null,
+  selectedScore: null,   // es. {h:0, a:0}
+  selectedProb: null,    // es. 0.148
+  selectedOdds: null,    // quota betfair inserita sulla cella
+  // Value Finder / Kelly shared
+  bankroll: 1000,
+  commission: 5,
+  // Masaniello
+  masaTarget: 200,
+  masaEvents: 10,
+  masaOdds: null,
+  // P&L
+  pnlOpenOdds: null,
+  pnlStake: null,
 };
 
 const globalCSS = `
@@ -202,11 +226,22 @@ function StrategyPage(){
 const CS_GUIDE={steps:[{title:"Trova gli xG",desc:"Cerca medie xG su Understat.com o FBref per le ultime 5-10 partite.",example:"Casa: 0.95 — Ospite: 0.88"},{title:"Inserisci i valori λ",desc:"Lambda = gol attesi per squadra. Più alto = più offensiva.",example:"λ Casa = 0.95, λ Ospite = 0.88"},{title:"Calcola e leggi la heatmap",desc:"Celle più luminose = risultati più probabili. 0-0 evidenziato in giallo."},{title:"Confronta con quote Betfair",desc:"Inserisci la quota Betfair in ogni cella. Edge verde = valore.",example:"Quota 9.40 → edge +2.24%"}],tip:"Cerca λ casa < 1.2 e λ ospite < 1.0 — gare difensive dove il 0-0 ha più probabilità."};
 
 function CorrectScoreTool(){
-  const[form,setForm]=useState({lambdaH:1.5,lambdaA:1.0});
-  const[matrix,setMatrix]=useState(null);
+  const{ctx,setCtx}=useApp();
+  const[form,setForm]=useState({lambdaH:ctx.lambdaH||1.5,lambdaA:ctx.lambdaA||1.0});
+  const[matrix,setMatrix]=useState(ctx.csMatrix||null);
   const[odds,setOdds]=useState({});
+  const[highlighted,setHighlighted]=useState(ctx.selectedScore||null);
   const MAX=5;
-  const calc=()=>setMatrix(pMatrix(parseFloat(form.lambdaH),parseFloat(form.lambdaA),MAX));
+  const calc=()=>{
+    const m=pMatrix(parseFloat(form.lambdaH),parseFloat(form.lambdaA),MAX);
+    setMatrix(m);
+    setCtx(c=>({...c,lambdaH:parseFloat(form.lambdaH),lambdaA:parseFloat(form.lambdaA),csMatrix:m,selectedScore:null,selectedProb:null,selectedOdds:null,masaOdds:null}));
+  };
+  const selectCell=(h,a,prob,oddVal)=>{
+    setHighlighted({h,a});
+    const q=oddVal?parseFloat(oddVal):null;
+    setCtx(c=>({...c,selectedScore:{h,a},selectedProb:prob,selectedOdds:q,masaOdds:q,pnlOpenOdds:q}));
+  };
   const scores=[];for(let h=0;h<=MAX;h++)for(let a=0;a<=MAX;a++)scores.push([h,a]);
   const getEdge=(h,a)=>{if(!matrix||!odds[`${h}-${a}`])return null;return(matrix[h][a]-1/parseFloat(odds[`${h}-${a}`]))*100;};
   const sorted=matrix?[...scores].sort((a,b)=>matrix[b[0]][b[1]]-matrix[a[0]][a[1]]).slice(0,10):[];
@@ -234,7 +269,13 @@ function CorrectScoreTool(){
           </div>
         </>)}
       </div>
-      {matrix&&(<div style={card} className="ec-card"><div style={{fontSize:11,color:C.textDim,letterSpacing:2,textTransform:"uppercase",marginBottom:14}}>Heatmap — inserisci quota Betfair per l'edge</div><div style={{overflowX:"auto"}}><table style={{borderCollapse:"separate",borderSpacing:3}}><thead><tr><th style={{padding:"4px 8px",fontSize:10,color:C.textDim,textAlign:"center"}}>C\O</th>{Array.from({length:MAX+1},(_,i)=><th key={i} style={{padding:"4px 8px",fontSize:11,color:C.textSec,textAlign:"center",minWidth:82}}>{i}</th>)}</tr></thead><tbody>{Array.from({length:MAX+1},(_,h)=>(<tr key={h}><td style={{padding:"4px 8px",fontSize:11,color:C.textSec,fontWeight:600,textAlign:"center"}}>{h}</td>{Array.from({length:MAX+1},(_,a)=>{const prob=matrix[h][a];const edge=getEdge(h,a);const intensity=Math.min(prob*8,.85);const isZZ=h===0&&a===0;const bg=isZZ?`rgba(255,184,0,${intensity+.1})`:`rgba(0,194,255,${intensity})`;const bord=isZZ?`1px solid rgba(255,184,0,${intensity*.7+.1})`:`1px solid rgba(0,194,255,${intensity*.5+.05})`;return(<td key={a} style={{padding:2}}><div style={{background:bg,border:bord,borderRadius:6,padding:"5px 4px",textAlign:"center",minWidth:78}}><div style={{fontFamily:"monospace",fontSize:11,fontWeight:600,color:intensity>0.55?"#040C1A":C.text}}>{pct(prob)}</div><input placeholder="quota" value={odds[`${h}-${a}`]||""} onChange={e=>setOdds(o=>({...o,[`${h}-${a}`]:e.target.value}))} style={{width:56,fontSize:10,background:"rgba(0,0,0,0.35)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:3,color:"#fff",padding:"2px 4px",textAlign:"center",fontFamily:"monospace",outline:"none",marginTop:2,boxSizing:"border-box"}}/>{edge!==null&&<div style={{fontSize:10,color:edge>0?C.profit:C.loss,fontFamily:"monospace",fontWeight:700,marginTop:1}}>{edge>0?"+":""}{edge.toFixed(1)}%</div>}</div></td>);})}</tr>))}</tbody></table></div></div>)}
+      {matrix&&(<div style={card} className="ec-card">
+    {ctx.selectedScore&&(<div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14,padding:"8px 12px",background:`${C.profit}0A`,border:`1px solid ${C.profit}30`,borderRadius:6}}><span style={{fontSize:14}}>✓</span><div style={{fontSize:12,color:C.profit,fontWeight:600}}>Risultato <span style={{fontFamily:"monospace"}}>{ctx.selectedScore.h}-{ctx.selectedScore.a}</span> selezionato — prob <span style={{fontFamily:"monospace"}}>{pct(ctx.selectedProb)}</span>{ctx.selectedOdds&&<span> · quota <span style={{fontFamily:"monospace"}}>{ctx.selectedOdds}</span></span>} · dati inviati a Value Finder, Kelly e Masaniello</div></div>)}
+    <div style={{fontSize:11,color:C.textDim,letterSpacing:2,textTransform:"uppercase",marginBottom:14}}>Heatmap — clicca "Seleziona" su una cella per inviare i dati agli altri tool</div><div style={{overflowX:"auto"}}><table style={{borderCollapse:"separate",borderSpacing:3}}><thead><tr><th style={{padding:"4px 8px",fontSize:10,color:C.textDim,textAlign:"center"}}>C\O</th>{Array.from({length:MAX+1},(_,i)=><th key={i} style={{padding:"4px 8px",fontSize:11,color:C.textSec,textAlign:"center",minWidth:82}}>{i}</th>)}</tr></thead><tbody>{Array.from({length:MAX+1},(_,h)=>(<tr key={h}><td style={{padding:"4px 8px",fontSize:11,color:C.textSec,fontWeight:600,textAlign:"center"}}>{h}</td>{Array.from({length:MAX+1},(_,a)=>{const prob=matrix[h][a];const edge=getEdge(h,a);const intensity=Math.min(prob*8,.85);const isZZ=h===0&&a===0;const bg=isZZ?`rgba(255,184,0,${intensity+.1})`:`rgba(0,194,255,${intensity})`;const bord=isZZ?`1px solid rgba(255,184,0,${intensity*.7+.1})`:`1px solid rgba(0,194,255,${intensity*.5+.05})`;return(<td key={a} style={{padding:2}}><div style={{background:bg,border:bord,borderRadius:6,padding:"5px 4px",textAlign:"center",minWidth:78}}><div style={{fontFamily:"monospace",fontSize:11,fontWeight:600,color:intensy>0.55?"#040C1A":C.text}}>{pct(prob)}</div>
+                            <input placeholder="quota" value={odds[`${h}-${a}`]||""} onChange={e=>{const v=e.target.value;setOdds(o=>({...o,[`${h}-${a}`]:v}));if(highlighted&&highlighted.h===h&&highlighted.a===a)selectCell(h,a,prob,v);}} style={{width:56,fontSize:10,background:"rgba(0,0,0,0.35)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:3,color:"#fff",padding:"2px 4px",textAlign:"center",fontFamily:"monospace",outline:"none",marginTop:2,boxSizing:"border-box"}}/>
+                            {edge!==null&&<div style={{fontSize:10,color:edge>0?C.profit:C.loss,fontFamily:"monospace",fontWeight:700,marginTop:1}}>{edge>0?"+":""}{edge.toFixed(1)}%</div>}
+                            <button onClick={()=>selectCell(h,a,prob,odds[`${h}-${a}`])} title="Invia dati a Value Finder, Kelly e Masaniello" style={{marginTop:2,width:"100%",background:highlighted&&highlighted.h===h&&highlighted.a===a?`${C.profit}25`:"rgba(0,194,255,0.08)",border:`1px solid ${highlighted&&highlighted.h===h&&highlighted.a===a?C.profit:"rgba(0,194,255,0.15)"}`,borderRadius:3,color:highlighted&&highlighted.h===h&&highlighted.a===a?C.profit:C.accent,fontSize:9,cursor:"pointer",padding:"2px 0",fontFamily:"inherit",fontWeight:700,letterSpacing:.5}}>{highlighted&&highlighted.h===h&&highlighted.a===a?"✓ ATTIVO":"→ USA"}</button>
+                          </div></td>);})}</tr>))}</tbody></table></div></div>)})}
     </div>
   );
 }
@@ -245,8 +286,23 @@ function CorrectScoreTool(){
 const VALUE_GUIDE={steps:[{title:"Scegli Back o Lay",desc:"Back = punti su un esito. Lay = punti contro.",example:"Tipo: Back"},{title:"Quota Betfair Exchange",desc:"Copia la quota dall'Exchange, non dal Sportsbook.",example:"Quota: 9.40"},{title:"Probabilità stimata dalla CS Matrix",desc:"NON usare la prob implicita della quota. Usa quella dalla matrice.",example:"Prob: 14.8%"},{title:"Leggi il verdetto e il gauge",desc:"EV positivo = VALUE BET. Il gauge mostra l'intensità del vantaggio."}],tip:"Collega sempre CS Matrix → Value Finder. La probabilità viene dalla matrice, non dalla tua sensazione."};
 
 function ValueFinderTool(){
-  const[form,setForm]=useState({betType:"back",odds:3.0,probPct:35,commission:5,stake:100});
-  const set=(k,v)=>setForm(f=>({...f,[k]:v}));
+  const{ctx,setCtx}=useApp();
+  const[form,setForm]=useState({
+    betType:"back",
+    odds:ctx.selectedOdds||3.0,
+    probPct:ctx.selectedProb?parseFloat((ctx.selectedProb*100).toFixed(2)):35,
+    commission:ctx.commission||5,
+    stake:100,
+  });
+  const set=(k,v)=>{
+    setForm(f=>({...f,[k]:v}));
+    if(k==="commission")setCtx(c=>({...c,commission:parseFloat(v)}));
+    if(k==="stake")setCtx(c=>({...c,pnlStake:parseFloat(v)}));
+  };
+  // sync from context when cs matrix updates
+  useState(()=>{
+    if(ctx.selectedOdds)setForm(f=>({...f,odds:ctx.selectedOdds,probPct:parseFloat((ctx.selectedProb*100).toFixed(2))}));
+  });
   const q=parseFloat(form.odds),prob=parseFloat(form.probPct)/100,comm=parseFloat(form.commission)/100,stake=parseFloat(form.stake);
   const isBack=form.betType==="back";
   const bNP=stake*(q-1)*(1-comm),bEV=prob*bNP-(1-prob)*stake,bROI=bEV/stake,bBE=1/q,impl=1/q,bEdge=prob-impl;
@@ -256,6 +312,7 @@ function ValueFinderTool(){
   return(
     <div style={{position:"relative",zIndex:1}}>
       <PageHeader icon={<IconValue/>} title="Value Finder" sub="Expected Value, edge e breakeven per Back e Lay su Betfair Exchange"/>
+      {ctx.selectedScore&&(<div style={{display:"flex",alignItems:"center",gap:10,marginBottom:16,padding:"8px 12px",background:`${C.accent}08`,border:`1px solid ${C.accent}25`,borderRadius:6,fontSize:12}}><span>🔗</span><span style={{color:C.textSec}}>Dati dalla CS Matrix: risultato <span style={{color:C.accent,fontFamily:"monospace",fontWeight:600}}>{ctx.selectedScore.h}-{ctx.selectedScore.a}</span> · prob <span style={{color:C.accent,fontFamily:"monospace"}}>{pct(ctx.selectedProb)}</span>{ctx.selectedOdds&&<span> · quota <span style={{color:C.accent,fontFamily:"monospace"}}>{ctx.selectedOdds}</span></span>} già precompilati</span></div>)}
       <GuidePanel {...VALUE_GUIDE}/>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1.4fr",gap:16}}>
         <div style={{...card,borderColor:C.borderBright}} className="ec-card">
@@ -295,8 +352,18 @@ function ValueFinderTool(){
 const KELLY_GUIDE={steps:[{title:"Inserisci il bankroll totale",desc:"Il capitale totale disponibile — non solo per questa scommessa, ma l'intero bankroll dedicato al betting.",example:"Bankroll: €1000"},{title:"Inserisci quota e probabilità stimata",desc:"Usa la probabilità dalla CS Matrix e la quota reale di Betfair Exchange. Non usare la probabilità implicita della quota.",example:"Quota: 9.40 — Prob: 14.8%"},{title:"Scegli la frazione Kelly",desc:"Kelly intero è aggressivo e ad alta varianza. Kelly ½ o ¼ sono consigliati per il betting reale — riducono il rischio mantenendo la crescita.",example:"Kelly ½ = metà della stake consigliata"},{title:"Leggi la stake consigliata",desc:"Il tool mostra la stake ottimale per le tre varianti. Kelly intero massimizza la crescita teorica, le frazioni proteggono il bankroll."}],tip:"Kelly frazionale ¼ è il più usato dai trader professionisti. Kelly intero espone a drawdown molto profondi anche con edge reale."};
 
 function KellyTool(){
-  const[form,setForm]=useState({bankroll:1000,odds:9.4,probPct:14.8,commission:5});
-  const set=(k,v)=>setForm(f=>({...f,[k]:v}));
+  const{ctx,setCtx}=useApp();
+  const[form,setForm]=useState({
+    bankroll:ctx.bankroll||1000,
+    odds:ctx.selectedOdds||9.4,
+    probPct:ctx.selectedProb?parseFloat((ctx.selectedProb*100).toFixed(2)):14.8,
+    commission:ctx.commission||5,
+  });
+  const set=(k,v)=>{
+    setForm(f=>({...f,[k]:v}));
+    if(k==="bankroll")setCtx(c=>({...c,bankroll:parseFloat(v)}));
+    if(k==="commission")setCtx(c=>({...c,commission:parseFloat(v)}));
+  };
   const q=parseFloat(form.odds),p=parseFloat(form.probPct)/100,B=parseFloat(form.bankroll),comm=parseFloat(form.commission)/100;
   const b=(q-1)*(1-comm);
   const kelly=(b*p-(1-p))/b;
@@ -323,6 +390,7 @@ function KellyTool(){
   return(
     <div style={{position:"relative",zIndex:1}}>
       <PageHeader icon={<IconKelly/>} title="Kelly Criterion" sub="Calcola la stake ottimale in base all'edge — proteggi il bankroll e massimizza la crescita" color={C.orange}/>
+      {ctx.selectedScore&&(<div style={{display:"flex",alignItems:"center",gap:10,marginBottom:16,padding:"8px 12px",background:`${C.orange}08`,border:`1px solid ${C.orange}25`,borderRadius:6,fontSize:12}}><span>🔗</span><span style={{color:C.textSec}}>Dati dalla CS Matrix: quota <span style={{color:C.orange,fontFamily:"monospace",fontWeight:600}}>{ctx.selectedOdds||"–"}</span> e prob <span style={{color:C.orange,fontFamily:"monospace"}}>{pct(ctx.selectedProb)}</span> già precompilati · bankroll condiviso con Masaniello</span></div>)}
       <GuidePanel {...KELLY_GUIDE}/>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1.5fr",gap:16}}>
         <div style={{...card,borderColor:C.borderBright}} className="ec-card">
@@ -520,9 +588,23 @@ function DutchingTool(){
 const MASA_GUIDE={steps:[{title:"Inserisci il bankroll",desc:"Il capitale dedicato a questa sequenza.",example:"Bankroll: €1000"},{title:"Imposta il target",desc:"Quanto vuoi guadagnare a fine sequenza.",example:"Target: €200 (20%)"},{title:"Numero di eventi (n)",desc:"Quante partite compongono la sequenza. Con n alto le stake sono più basse.",example:"n = 10 eventi"},{title:"Quota e tipo",desc:"Quota media prevista. Back = punti su, Lay = punti contro.",example:"Quota: 9.0, Back"},{title:"Segui la tabella",desc:"Gioca esattamente la stake dello step corrente. Non deviare mai."}],tip:"Usa la stessa quota per tutta la sequenza. Partite con quote molto diverse = nuova sequenza separata."};
 
 function MasanielloTool(){
-  const[form,setForm]=useState({bankroll:1000,target:200,events:10,odds:9.0,betType:"back",commission:5});
+  const{ctx,setCtx}=useApp();
+  const[form,setForm]=useState({
+    bankroll:ctx.bankroll||1000,
+    target:ctx.masaTarget||200,
+    events:ctx.masaEvents||10,
+    odds:ctx.masaOdds||ctx.selectedOdds||9.0,
+    betType:"back",
+    commission:ctx.commission||5,
+  });
   const[steps,setSteps]=useState([]);
-  const set=(k,v)=>setForm(f=>({...f,[k]:v}));
+  const set=(k,v)=>{
+    setForm(f=>({...f,[k]:v}));
+    if(k==="bankroll")setCtx(c=>({...c,bankroll:parseFloat(v)}));
+    if(k==="target")setCtx(c=>({...c,masaTarget:parseFloat(v)}));
+    if(k==="events")setCtx(c=>({...c,masaEvents:parseInt(v)}));
+    if(k==="commission")setCtx(c=>({...c,commission:parseFloat(v)}));
+  };
   const isLay=form.betType==="lay";
   const Q=(parseFloat(form.bankroll)+parseFloat(form.target))/parseFloat(form.bankroll);
   const coeff=Math.pow(Q,1/parseInt(form.events));
@@ -543,6 +625,7 @@ function MasanielloTool(){
   return(
     <div style={{position:"relative",zIndex:1}}>
       <PageHeader icon={<IconMasa/>} title="Masaniello Calculator" sub="Gestione progressiva Back / Lay con rounding Betfair €0.50"/>
+      {ctx.selectedScore&&(<div style={{display:"flex",alignItems:"center",gap:10,marginBottom:16,padding:"8px 12px",background:`${C.accent}08`,border:`1px solid ${C.accent}25`,borderRadius:6,fontSize:12}}><span>🔗</span><span style={{color:C.textSec}}>Quota dalla CS Matrix <span style={{color:C.accent,fontFamily:"monospace",fontWeight:600}}>{ctx.masaOdds||ctx.selectedOdds||"–"}</span> precompilata · bankroll condiviso con Kelly</span></div>)}
       <GuidePanel {...MASA_GUIDE}/>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
         <div style={{...card,borderColor:C.borderBright}} className="ec-card">
@@ -581,7 +664,14 @@ function MasanielloTool(){
 const PNL_GUIDE={steps:[{title:"Inserisci la scommessa originale",desc:"Tipo (Back/Lay), quota a cui hai aperto la posizione e stake piazzata.",example:"Back CS 0-0 @ 9.40 — Stake €20"},{title:"Inserisci la quota attuale",desc:"La quota corrente del mercato in-play su Betfair Exchange. Se il punteggio è ancora 0-0, sarà scesa.",example:"Quota attuale: 4.50 (0-0 al 55')"},{title:"Scegli lo scenario di uscita",desc:"Il tool calcola automaticamente la stake Lay per greening completo, parziale (70%) o uscita in perdita."},{title:"Leggi il P&L garantito",desc:"Ogni scenario mostra il profitto o perdita garantita qualunque cosa accada nel resto della partita."}],tip:"Usa il P&L Simulator negli Scenari C e D della Strategia Live: quando sei in profitto e vuoi garantire una parte del guadagno senza aspettare il 90'."};
 
 function PnLTool(){
-  const[form,setForm]=useState({betType:"back",openOdds:9.4,currentOdds:4.5,stake:20,commission:5});
+  const{ctx}=useApp();
+  const[form,setForm]=useState({
+    betType:"back",
+    openOdds:ctx.pnlOpenOdds||ctx.selectedOdds||9.4,
+    currentOdds:4.5,
+    stake:ctx.pnlStake||20,
+    commission:ctx.commission||5,
+  });
   const set=(k,v)=>setForm(f=>({...f,[k]:v}));
   const isBack=form.betType==="back";
   const qOpen=parseFloat(form.openOdds),qCurr=parseFloat(form.currentOdds);
@@ -624,6 +714,7 @@ function PnLTool(){
   return(
     <div style={{position:"relative",zIndex:1}}>
       <PageHeader icon={<IconPnL/>} title="P&L Simulator" sub="Calcola il profitto/perdita garantito per ogni scenario di uscita live" color={C.warn}/>
+      {ctx.selectedScore&&(<div style={{display:"flex",alignItems:"center",gap:10,marginBottom:16,padding:"8px 12px",background:`${C.warn}08`,border:`1px solid ${C.warn}25`,borderRadius:6,fontSize:12}}><span>🔗</span><span style={{color:C.textSec}}>Quota apertura dalla CS Matrix <span style={{color:C.warn,fontFamily:"monospace",fontWeight:600}}>{ctx.pnlOpenOdds||"–"}</span> · stake dal Value Finder <span style={{color:C.warn,fontFamily:"monospace"}}>{ctx.pnlStake?"€"+ctx.pnlStake:"–"}</span> precompilati</span></div>)}
       <GuidePanel {...PNL_GUIDE}/>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1.5fr",gap:16}}>
         <div style={{display:"flex",flexDirection:"column",gap:12}}>
@@ -690,8 +781,71 @@ const SECTIONS={
   live: {label:"Live",         tools:["pnl"]},
 };
 
+/* ─── FREEMIUM TRIAL ─────────────────────────────────────────── */
+function getTrialInfo(){
+  const key="edgecalc_trial_start";
+  let start=localStorage.getItem(key);
+  if(!start){start=Date.now().toString();localStorage.setItem(key,start);}
+  const daysLeft=Math.max(0,14-Math.floor((Date.now()-parseInt(start))/(1000*60*60*24)));
+  return{daysLeft,expired:daysLeft===0};
+}
+
+const LOCKED_TOOLS=["kelly","dutching","masa","pnl"];
+
+function TrialBanner({daysLeft,expired}){
+  const[show,setShow]=useState(true);
+  if(!show)return null;
+  if(expired) return(
+    <div style={{position:"fixed",inset:0,background:"rgba(7,14,28,.92)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center"}}>
+      <div style={{background:C.card,border:`1px solid ${C.borderBright}`,borderRadius:12,padding:"40px 48px",maxWidth:440,textAlign:"center"}}>
+        <div style={{fontSize:36,marginBottom:16}}>🔒</div>
+        <div style={{fontSize:20,fontWeight:700,fontFamily:"monospace",color:C.text,marginBottom:8}}>Trial scaduto</div>
+        <div style={{fontSize:14,color:C.textSec,lineHeight:1.7,marginBottom:24}}>Il tuo periodo gratuito di 14 giorni è terminato. Passa a Pro per sbloccare tutti i tool e continuare a usare il metodo EdgeCalc.</div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:20}}>
+          {[["Free","Strategia + CS Matrix + Value Finder",C.textSec],["Pro €9/mese","Tutti i tool + storico scommesse",C.accent],["Premium €19/mese","Pro + alert Telegram + dati live",C.profit]].map(([plan,desc,col])=>(
+            <div key={plan} style={{background:"#050D1A",border:`1px solid ${col}30`,borderRadius:8,padding:"12px",textAlign:"left",gridColumn:plan==="Free"?"1/3":"auto"}}>
+              <div style={{fontFamily:"monospace",fontSize:13,fontWeight:700,color:col,marginBottom:4}}>{plan}</div>
+              <div style={{fontSize:11,color:C.textSec}}>{desc}</div>
+            </div>
+          ))}
+        </div>
+        <button style={{width:"100%",background:C.accent,color:"#040C1A",border:"none",borderRadius:6,padding:"11px",fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:"inherit",marginBottom:8}}>Passa a Pro — €9/mese</button>
+        <div style={{fontSize:11,color:C.textDim}}>Prossimamente — integrazione Stripe in arrivo</div>
+      </div>
+    </div>
+  );
+  if(daysLeft>7)return null;
+  return(
+    <div style={{position:"fixed",bottom:16,right:16,zIndex:500,background:C.card,border:`1px solid ${daysLeft<=3?C.loss:C.warn}`,borderRadius:8,padding:"10px 14px",maxWidth:280,animation:"fadeInUp .3s ease"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:8}}>
+        <div>
+          <div style={{fontSize:12,fontWeight:700,color:daysLeft<=3?C.loss:C.warn,marginBottom:3}}>⏳ Trial: {daysLeft} giorni rimasti</div>
+          <div style={{fontSize:11,color:C.textSec}}>Passa a Pro per sbloccare tutti i tool</div>
+        </div>
+        <button onClick={()=>setShow(false)} style={{background:"transparent",border:"none",color:C.textDim,cursor:"pointer",fontSize:14,lineHeight:1,flexShrink:0}}>×</button>
+      </div>
+      <button style={{marginTop:8,width:"100%",background:`${C.accent}20`,border:`1px solid ${C.accent}40`,color:C.accent,borderRadius:5,padding:"6px",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>Scopri i piani →</button>
+    </div>
+  );
+}
+
+function LockedOverlay({toolId}){
+  return(
+    <div style={{position:"absolute",inset:0,background:"rgba(7,14,28,.75)",backdropFilter:"blur(4px)",zIndex:10,display:"flex",alignItems:"center",justifyContent:"center",borderRadius:8}}>
+      <div style={{textAlign:"center",padding:32}}>
+        <div style={{fontSize:32,marginBottom:12}}>🔒</div>
+        <div style={{fontSize:16,fontWeight:700,color:C.text,marginBottom:6}}>Tool Pro</div>
+        <div style={{fontSize:13,color:C.textSec,marginBottom:16}}>Disponibile con piano Pro o Premium</div>
+        <button style={{background:C.accent,color:"#040C1A",border:"none",borderRadius:6,padding:"9px 20px",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>Passa a Pro — €9/mese</button>
+      </div>
+    </div>
+  );
+}
+
 export default function App(){
   const[active,setActive]=useState("strategy");
+  const[ctx,setCtx]=useState(defaultCtx);
+  const trial=getTrialInfo();
   return(
     <>
       <style>{globalCSS}</style>
@@ -710,7 +864,8 @@ export default function App(){
                 <div style={{padding:"10px 12px 4px",fontSize:9,color:C.textDim,letterSpacing:2.5,textTransform:"uppercase"}}>{sec.label}</div>
                 {TOOLS.filter(t=>sec.tools.includes(t.id)).map(({id,label,Icon,color})=>{
                   const a=active===id;
-                  return(<button key={id} className="ec-nav" onClick={()=>setActive(id)} style={{display:"flex",alignItems:"center",gap:10,padding:"9px 20px",cursor:"pointer",border:"none",background:a?`${color}18`:"transparent",color:a?color:C.textSec,borderLeft:a?`2px solid ${color}`:"2px solid transparent",fontSize:13,fontWeight:a?600:400,width:"100%",textAlign:"left",transition:"all .15s"}}><Icon/>{label}{a&&<div style={{marginLeft:"auto",width:5,height:5,borderRadius:"50%",background:color,boxShadow:`0 0 6px ${color}`}}/>}</button>);
+                  const isLocked=trial.expired&&LOCKED_TOOLS.includes(id);
+                  return(<button key={id} className="ec-nav" onClick={()=>setActive(id)} style={{display:"flex",alignItems:"center",gap:10,padding:"9px 20px",cursor:"pointer",border:"none",background:a?`${color}18`:"transparent",color:a?color:isLocked?C.textDim:C.textSec,borderLeft:a?`2px solid ${color}`:"2px solid transparent",fontSize:13,fontWeight:a?600:400,width:"100%",textAlign:"left",transition:"all .15s",opacity:isLocked?.6:1}}><Icon/>{label}{isLocked&&<span style={{marginLeft:"auto",fontSize:10}}>🔒</span>}{a&&!isLocked&&<div style={{marginLeft:"auto",width:5,height:5,borderRadius:"50%",background:color,boxShadow:`0 0 6px ${color}`}}/>}</button>);
                 })}
               </div>
             ))}
@@ -722,14 +877,18 @@ export default function App(){
           <div style={{padding:"0 10px"}}><div style={{background:`${C.accent}10`,border:`1px solid ${C.border}`,borderRadius:6,padding:"5px 10px"}}><div style={{fontFamily:"monospace",fontSize:10,color:C.accent}}>v3.1 — 7 tools</div></div></div>
         </div>
 
-        {/* Main — tutti i tool sempre montati, visibilità con display */}
+        {/* Main */}
         <div style={{flex:1,overflow:"auto",padding:"28px 32px",position:"relative",zIndex:1}}>
           <div style={{maxWidth:1100,margin:"0 auto"}}>
-            {TOOLS.map(({id,component:Tool})=>(
-              <div key={id} style={{display:active===id?"block":"none"}}>
-                <Tool/>
-              </div>
-            ))}
+            <AppCtx.Provider value={{ctx,setCtx}}>
+              {TOOLS.map(({id,component:Tool})=>(
+                <div key={id} style={{display:active===id?"block":"none",position:"relative"}}>
+                  {trial.expired&&LOCKED_TOOLS.includes(id)&&<LockedOverlay toolId={id}/>}
+                  <Tool/>
+                </div>
+              ))}
+              <TrialBanner daysLeft={trial.daysLeft} expired={trial.expired}/>
+            </AppCtx.Provider>
           </div>
         </div>
       </div>
