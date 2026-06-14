@@ -385,10 +385,19 @@ function DutchingTool(){
   const[commission,setCommission]=useState(5);
   const[selections,setSelections]=useState([{id:1,name:"CS 0-0",odds:9.4},{id:2,name:"CS 1-0",odds:7.2},{id:3,name:"CS 0-1",odds:8.0}]);
   const[nextId,setNextId]=useState(4);
+  const[editingId,setEditingId]=useState(null);
 
-  const addSel=()=>{if(selections.length>=6)return;setSelections(s=>[...s,{id:nextId,name:`Selezione ${nextId}`,odds:5.0}]);setNextId(n=>n+1);};
+  const PRESETS=[
+    {group:"Correct Score",items:["CS 0-0","CS 1-0","CS 0-1","CS 1-1","CS 2-0","CS 0-2","CS 2-1","CS 1-2"]},
+    {group:"Gol",items:["Under 0.5","Under 1.5","Under 2.5","Under 3.5","Over 0.5","Over 1.5","Over 2.5","Over 3.5"]},
+    {group:"Risultato",items:["1 Casa","X Pareggio","2 Ospite","1X","X2","12"]},
+    {group:"Altro",items:["Goal GG","No Goal NG","Primo gol Casa","Primo gol Ospite"]},
+  ];
+
+  const addSel=()=>{if(selections.length>=6)return;const newId=nextId;setSelections(s=>[...s,{id:newId,name:"",odds:5.0}]);setNextId(n=>n+1);setEditingId(newId);};
   const removeSel=(id)=>setSelections(s=>s.filter(x=>x.id!==id));
   const updateSel=(id,field,val)=>setSelections(s=>s.map(x=>x.id===id?{...x,[field]:val}:x));
+  const applyPreset=(id,name)=>{updateSel(id,"name",name);setEditingId(null);};
 
   const comm=parseFloat(commission)/100;
   const total=parseFloat(totalStake);
@@ -426,12 +435,38 @@ function DutchingTool(){
               {selections.length<6&&<button onClick={addSel} style={{background:`${C.purple}20`,border:`1px solid ${C.purple}40`,color:C.purple,borderRadius:5,padding:"4px 12px",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>+ Aggiungi</button>}
             </div>
             {selections.map((s,i)=>(
-              <div key={s.id} style={{background:"#050D1A",border:`1px solid ${C.border}`,borderRadius:7,padding:"10px 12px",marginBottom:8}}>
-                <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:6}}>
+              <div key={s.id} style={{background:"#050D1A",border:`1px solid ${editingId===s.id?C.purple:C.border}`,borderRadius:7,padding:"10px 12px",marginBottom:8,transition:"border .2s"}}>
+                <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:8}}>
                   <div style={{width:20,height:20,borderRadius:"50%",background:`${C.purple}20`,border:`1px solid ${C.purple}40`,color:C.purple,fontSize:10,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{i+1}</div>
-                  <input value={s.name} onChange={e=>updateSel(s.id,"name",e.target.value)} style={{flex:1,background:"transparent",border:"none",color:C.text,fontSize:13,fontWeight:600,fontFamily:"Inter,sans-serif",outline:"none"}}/>
-                  {selections.length>2&&<button onClick={()=>removeSel(s.id)} style={{background:"transparent",border:"none",color:C.textDim,cursor:"pointer",fontSize:16,lineHeight:1,padding:"0 4px"}}>×</button>}
+                  <input
+                    value={s.name}
+                    onChange={e=>updateSel(s.id,"name",e.target.value)}
+                    onFocus={()=>setEditingId(s.id)}
+                    placeholder="Scrivi o scegli dal menu ▾"
+                    style={{flex:1,background:"#0A1525",border:`1px solid ${C.border}`,borderRadius:5,color:C.text,fontSize:13,fontWeight:600,fontFamily:"Inter,sans-serif",outline:"none",padding:"5px 8px",transition:"border .15s"}}
+                  />
+                  {selections.length>2&&<button onClick={()=>removeSel(s.id)} style={{background:"transparent",border:"none",color:C.textDim,cursor:"pointer",fontSize:16,lineHeight:1,padding:"0 4px",flexShrink:0}}>×</button>}
                 </div>
+                {/* Preset picker — appare quando il campo è in focus o vuoto */}
+                {(editingId===s.id||!s.name)&&(
+                  <div style={{background:"#07101F",border:`1px solid ${C.purple}30`,borderRadius:6,padding:"10px",marginBottom:8,animation:"fadeInUp .15s ease"}}>
+                    <div style={{fontSize:10,color:C.purple,fontWeight:700,letterSpacing:1,textTransform:"uppercase",marginBottom:8}}>Selezione rapida</div>
+                    {PRESETS.map(group=>(
+                      <div key={group.group} style={{marginBottom:8}}>
+                        <div style={{fontSize:9,color:C.textDim,letterSpacing:1.5,textTransform:"uppercase",marginBottom:4}}>{group.group}</div>
+                        <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
+                          {group.items.map(preset=>(
+                            <button key={preset} onClick={()=>applyPreset(s.id,preset)}
+                              style={{padding:"3px 8px",background:s.name===preset?`${C.purple}30`:`${C.purple}10`,border:`1px solid ${s.name===preset?C.purple:C.purple+"30"}`,borderRadius:4,color:s.name===preset?C.purple:C.textSec,fontSize:11,cursor:"pointer",fontFamily:"inherit",transition:"all .1s"}}>
+                              {preset}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                    <button onClick={()=>setEditingId(null)} style={{marginTop:4,background:"transparent",border:"none",color:C.textDim,fontSize:11,cursor:"pointer",fontFamily:"inherit"}}>✕ Chiudi</button>
+                  </div>
+                )}
                 <div style={{display:"flex",gap:8,alignItems:"center"}}>
                   <label style={{fontSize:11,color:C.textDim,minWidth:40}}>Quota</label>
                   <input className="ec-input" type="number" step="0.1" value={s.odds} onChange={e=>updateSel(s.id,"odds",e.target.value)} style={{...inputStyle,marginBottom:0,flex:1}}/>
