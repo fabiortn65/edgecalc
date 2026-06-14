@@ -657,23 +657,18 @@ const SECTIONS={
 
 export default function App(){
   const[active,setActive]=useState("strategy");
-  const ActiveTool=TOOLS.find(t=>t.id===active)?.component??(()=>null);
   return(
     <>
       <style>{globalCSS}</style>
       <div style={{display:"flex",height:"100vh",width:"100%",background:C.bg,fontFamily:"'Inter',system-ui,sans-serif",color:C.text,overflow:"hidden",position:"relative"}}>
         <GridBackground/>
-        {/* Sidebar */}
         <div style={{width:220,minWidth:220,background:`${C.sidebar}EE`,borderRight:`1px solid ${C.border}`,display:"flex",flexDirection:"column",padding:"0 0 12px 0",overflow:"hidden",position:"relative",zIndex:2,backdropFilter:"blur(8px)"}}>
-          {/* Logo */}
           <div style={{padding:"18px 20px 14px",borderBottom:`1px solid ${C.border}`}}>
             <div style={{display:"flex",alignItems:"center",gap:10}}>
               <IconDelta/>
               <div><div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:17,fontWeight:700,color:C.accent,textShadow:`0 0 20px ${C.accent}66`}}>EdgeCalc</div><div style={{fontSize:9,color:C.textDim,letterSpacing:2.5,textTransform:"uppercase",marginTop:1}}>Exchange Tools</div></div>
             </div>
           </div>
-
-          {/* Nav sections */}
           <div style={{flex:1,overflowY:"auto",paddingBottom:8}}>
             {Object.entries(SECTIONS).map(([secId,sec])=>(
               <div key={secId}>
@@ -685,19 +680,21 @@ export default function App(){
               </div>
             ))}
           </div>
-
-          {/* Flusso hint */}
           <div style={{margin:"0 10px 8px",background:`${C.profit}08`,border:`1px solid ${C.profit}20`,borderRadius:6,padding:"8px 10px"}}>
             <div style={{fontSize:9,color:C.profit,fontWeight:700,marginBottom:4,letterSpacing:1}}>FLUSSO CORRETTO</div>
             {["① CS Matrix","② Value Finder","③ Kelly / Dutching","④ Masaniello","⑤ P&L Simulator (live)"].map((s,i)=>(<div key={i} style={{fontSize:10,color:C.textSec,padding:"1px 0"}}>{s}</div>))}
           </div>
-          <div style={{padding:"0 10px"}}><div style={{background:`${C.accent}10`,border:`1px solid ${C.border}`,borderRadius:6,padding:"5px 10px"}}><div style={{fontFamily:"monospace",fontSize:10,color:C.accent}}>v3.0 — 7 tools</div></div></div>
+          <div style={{padding:"0 10px"}}><div style={{background:`${C.accent}10`,border:`1px solid ${C.border}`,borderRadius:6,padding:"5px 10px"}}><div style={{fontFamily:"monospace",fontSize:10,color:C.accent}}>v3.1 — 7 tools</div></div></div>
         </div>
 
-        {/* Main */}
+        {/* Main — tutti i tool sempre montati, visibilità con display */}
         <div style={{flex:1,overflow:"auto",padding:"28px 32px",position:"relative",zIndex:1}}>
           <div style={{maxWidth:1100,margin:"0 auto"}}>
-            <ActiveTool/>
+            {TOOLS.map(({id,component:Tool})=>(
+              <div key={id} style={{display:active===id?"block":"none"}}>
+                <Tool/>
+              </div>
+            ))}
           </div>
         </div>
       </div>
