@@ -301,34 +301,47 @@ function CorrectScoreTool(){
 
   const sorted=matrix?[...scores].sort((a,b)=>matrix[b[0]][b[1]]-matrix[a[0]][a[1]]).slice(0,6):[];
 
-  // Live suggestion logic
+  // Live suggestion logic — soglie calibrate su dati reali
   const getLiveSuggestion=()=>{
     const min=parseInt(liveStats.minute)||0;
+    const totShots=(parseFloat(liveStats.shotsH)||0)+(parseFloat(liveStats.shotsA)||0);
     const sOH=parseFloat(liveStats.shotsOnH)||0;
     const sOA=parseFloat(liveStats.shotsOnA)||0;
-    const poss=parseFloat(liveStats.possH)||50;
+    const totShotsOn=sOH+sOA;
     const danH=parseFloat(liveStats.dangerH)||0;
     const danA=parseFloat(liveStats.dangerA)||0;
+    const totDanger=danH+danA;
     const score=`${liveStats.scoreH}-${liveStats.scoreA}`;
-    const totalShots=sOH+sOA;
-    const isLow=totalShots<3&&danH+danA<4;
-    const isHigh=totalShots>5||danH+danA>8;
     const is00=score==="0-0";
-
-    if(min<30){
-      if(isLow&&is00)return{tech:"CS 0-0 Back",conf:"Alta",color:C.profit,reason:"Partita bloccata nei primi 30' — poche occasioni, ritmo difensivo. Ottimo per mantenere o aprire CS 0-0."};
-      if(isHigh)return{tech:"Over 2.5 Back",conf:"Media",color:C.warn,reason:"Molti tiri e attacchi pericolosi nelle prime fasi — la partita sembra aperta. Valuta Over 2.5."};
-      return{tech:"Attendi",conf:"–",color:C.textSec,reason:"Dati insufficienti per una raccomandazione affidabile. Aspetta almeno il 30'."};
+    // Soglie normalizzate per 30 minuti di gioco
+    const rateShots=min>0?totShots/(min/30):0;
+    const rateShotsOn=min>0?totShotsOn/(min/30):0;
+    const rateDanger=min>0?totDanger/(min/30):0;
+    // Partita aperta: ritmo alto confermato da PIU' indicatori
+    const isOpen=(rateShots>5&&rateShotsOn>2)||(rateShotsOn>3)||(rateDanger>12&&rateShotsOn>1.5);
+    const isLocked=rateShots<3&&rateShotsOn<1.5&&rateDanger<5;
+    const isNeutral=!isOpen&&!isLocked;
+    if(min===0)return{tech:"Inserisci i dati",conf:"–",color:C.textDim,reason:"Inserisci minuto e statistiche live per ricevere il suggerimento sulla tecnica migliore da usare."};
+    if(min<25){
+      if(isLocked&&is00)return{tech:"CS 0-0 Back",conf:"Media",color:C.profit,reason:`Al ${min}' con ${totShots} tiri totali e ${totShotsOn} in porta — ritmo basso. Buon segnale per il CS 0-0, ma aspetta ancora qualche minuto per conferma.`};
+      return{tech:"Attendi (dati insufficienti)",conf:"–",color:C.textSec,reason:`Al ${min}' il campione statistico è troppo piccolo: ${totShots} tiri e ${totShotsOn} in porta. Aspetta il 25-30' prima di prendere decisioni.`};
     }
-    if(min>=30&&min<60){
-      if(is00&&isLow)return{tech:"CS 0-0 + Under 2.5",conf:"Alta",color:C.profit,reason:"0-0 al "+min+"' con poche occasioni. Combo ideale: mantieni CS 0-0 e aggiungi Under 2.5 Live."};
-      if(is00&&isHigh)return{tech:"Under 2.5 Lay / Over Back",conf:"Media",color:C.warn,reason:"0-0 al "+min+"' ma molti tiri. Il gol potrebbe arrivare — considera Lay Under 2.5 o Over Back."};
-      if(!is00)return{tech:"P&L Simulator",conf:"Alta",color:C.accent,reason:"Risultato cambiato. Vai al P&L Simulator per calcolare il green o la gestione della posizione aperta."};
+    if(min>=25&&min<60){
+      if(is00&&isLocked)return{tech:"CS 0-0 + Under 2.5",conf:"Alta",color:C.profit,reason:`0-0 al ${min}' con ritmo basso confermato: ${totShots} tiri, ${totShotsOn} in porta, ${totDanger} attacchi pericolosi. Combo ideale: mantieni CS 0-0 e aggiungi Under 2.5 Live.`};
+      if(is00&&isOpen)return{tech:"Lay Under 2.5 / Over Back",conf:"Media",color:C.warn,reason:`0-0 al ${min}' ma ritmo elevato: ${totShots} tiri e ${totShotsOn} in porta. Il gol è probabile — valuta Lay Under 2.5 o Back Over 2.5.`};
+      if(is00&&isNeutral)return{tech:"Mantieni CS 0-0",conf:"Media",color:C.accent,reason:`0-0 al ${min}' con ritmo nella norma (${totShots} tiri, ${totShotsOn} in porta). Mantieni la posizione e rivaluta al 60'.`};
+      if(!is00)return{tech:"P&L Simulator",conf:"Alta",color:C.accent,reason:`Il punteggio è ${score} al ${min}'. Vai al P&L Simulator per calcolare il green ottimale o gestire la perdita.`};
     }
-    if(min>=60){
-      if(is00&&isLow)return{tech:"CS 0-0 Hold + Under 2.5",conf:"Molto Alta",color:C.profit,reason:"0-0 al "+min+"' — momento d'oro. Massimizza: tieni CS 0-0 e aggiungi Under 2.5. Quote in calo = profitto in crescita."};
-      if(is00&&isHigh)return{tech:"Green parziale",conf:"Alta",color:C.warn,reason:"0-0 al "+min+"' ma pressione alta. Usa P&L Simulator per garantire il 60-70% del profitto già realizzato."};
-      if(!is00)return{tech:"P&L Simulator",conf:"Alta",color:C.accent,reason:"Vai al P&L Simulator — la posizione CS 0-0 è persa o a rischio, calcola la gestione ottimale."};
+    if(min>=60&&min<80){
+      if(is00&&isLocked)return{tech:"CS 0-0 + Under 2.5",conf:"Molto Alta",color:C.profit,reason:`0-0 al ${min}' con ritmo basso — momento d'oro. Mantieni CS 0-0 e aggiungi Under 2.5: le quote scendono, il profitto cresce.`};
+      if(is00&&isOpen)return{tech:"Green parziale (70%)",conf:"Alta",color:C.warn,reason:`0-0 al ${min}' ma pressione alta: ${totShotsOn} tiri in porta, ${totDanger} attacchi pericolosi. Usa P&L Simulator per garantire il 60-70% del profitto.`};
+      if(is00&&isNeutral)return{tech:"CS 0-0 Hold",conf:"Alta",color:C.profit,reason:`0-0 al ${min}' con ritmo nella norma. Tieni la posizione — ogni minuto vale profitto aggiuntivo.`};
+      if(!is00)return{tech:"P&L Simulator",conf:"Alta",color:C.accent,reason:`Punteggio ${score} al ${min}'. Gestisci subito la posizione con il P&L Simulator.`};
+    }
+    if(min>=80){
+      if(is00&&isLocked)return{tech:"Hold fino al 90'",conf:"Molto Alta",color:C.profit,reason:`0-0 all'${min}' con partita bloccata (${totShotsOn} tiri in porta). Non uscire — il profitto massimo è a portata. Eventuale Lay minimo solo se vuoi sicurezza assoluta.`};
+      if(is00&&(isOpen||isNeutral))return{tech:"Lay parziale urgente",conf:"Alta",color:C.warn,reason:`0-0 all'${min}' ma con ${totShotsOn} tiri in porta — rischio gol negli ultimi minuti. Usa P&L Simulator: fai Lay parziale per incassare il 50-60% del profitto subito.`};
+      if(!is00)return{tech:"P&L Simulator",conf:"Molto Alta",color:C.accent,reason:`Punteggio ${score} all'${min}'. Chiudi la posizione con il P&L Simulator nel modo più conveniente.`};
     }
     return{tech:"Nessuna raccomandazione",conf:"–",color:C.textDim,reason:"Inserisci i dati live per ricevere un suggerimento."};
   };
