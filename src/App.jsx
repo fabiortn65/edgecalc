@@ -587,15 +587,23 @@ function ValueFinderTool(){
     commission:ctx.commission||5,
     stake:100,
   });
+  const[lastCtxKey,setLastCtxKey]=useState(null);
   const set=(k,v)=>{
     setForm(f=>({...f,[k]:v}));
     if(k==="commission")setCtx(c=>({...c,commission:parseFloat(v)}));
     if(k==="stake")setCtx(c=>({...c,pnlStake:parseFloat(v)}));
   };
-  // sync from context when cs matrix updates
-  useState(()=>{
-    if(ctx.selectedOdds)setForm(f=>({...f,odds:ctx.selectedOdds,probPct:parseFloat((ctx.selectedProb*100).toFixed(2))}));
-  });
+  // Auto-sync quando CS Matrix seleziona una cella
+  const ctxKey=ctx.selectedScore?`${ctx.selectedScore.h}-${ctx.selectedScore.a}-${ctx.selectedOdds}`:"none";
+  if(ctxKey!==lastCtxKey&&ctxKey!=="none"){
+    setLastCtxKey(ctxKey);
+    setForm(f=>({
+      ...f,
+      odds:ctx.selectedOdds?parseFloat(ctx.selectedOdds):f.odds,
+      probPct:ctx.selectedProb?parseFloat((ctx.selectedProb*100).toFixed(2)):f.probPct,
+      commission:ctx.commission||f.commission,
+    }));
+  }
   const q=parseFloat(form.odds),prob=parseFloat(form.probPct)/100,comm=parseFloat(form.commission)/100,stake=parseFloat(form.stake);
   const isBack=form.betType==="back";
   const bNP=stake*(q-1)*(1-comm),bEV=prob*bNP-(1-prob)*stake,bROI=bEV/stake,bBE=1/q,impl=1/q,bEdge=prob-impl;
@@ -652,11 +660,23 @@ function KellyTool(){
     probPct:ctx.selectedProb?parseFloat((ctx.selectedProb*100).toFixed(2)):14.8,
     commission:ctx.commission||5,
   });
+  const[lastCtxKey,setLastCtxKey]=useState(null);
   const set=(k,v)=>{
     setForm(f=>({...f,[k]:v}));
     if(k==="bankroll")setCtx(c=>({...c,bankroll:parseFloat(v)}));
     if(k==="commission")setCtx(c=>({...c,commission:parseFloat(v)}));
   };
+  const ctxKey=ctx.selectedScore?`${ctx.selectedScore.h}-${ctx.selectedScore.a}-${ctx.selectedOdds}`:"none";
+  if(ctxKey!==lastCtxKey&&ctxKey!=="none"){
+    setLastCtxKey(ctxKey);
+    setForm(f=>({
+      ...f,
+      odds:ctx.selectedOdds?parseFloat(ctx.selectedOdds):f.odds,
+      probPct:ctx.selectedProb?parseFloat((ctx.selectedProb*100).toFixed(2)):f.probPct,
+      bankroll:ctx.bankroll||f.bankroll,
+      commission:ctx.commission||f.commission,
+    }));
+  }
   const q=parseFloat(form.odds),p=parseFloat(form.probPct)/100,B=parseFloat(form.bankroll),comm=parseFloat(form.commission)/100;
   const b=(q-1)*(1-comm);
   const kelly=(b*p-(1-p))/b;
@@ -891,6 +911,7 @@ function MasanielloTool(){
     commission:ctx.commission||5,
   });
   const[steps,setSteps]=useState([]);
+  const[lastCtxKey,setLastCtxKey]=useState(null);
   const set=(k,v)=>{
     setForm(f=>({...f,[k]:v}));
     if(k==="bankroll")setCtx(c=>({...c,bankroll:parseFloat(v)}));
@@ -898,6 +919,16 @@ function MasanielloTool(){
     if(k==="events")setCtx(c=>({...c,masaEvents:parseInt(v)}));
     if(k==="commission")setCtx(c=>({...c,commission:parseFloat(v)}));
   };
+  const ctxKey=ctx.selectedScore?`${ctx.selectedScore.h}-${ctx.selectedScore.a}-${ctx.selectedOdds}`:"none";
+  if(ctxKey!==lastCtxKey&&ctxKey!=="none"){
+    setLastCtxKey(ctxKey);
+    setForm(f=>({
+      ...f,
+      odds:ctx.masaOdds||ctx.selectedOdds?parseFloat(ctx.masaOdds||ctx.selectedOdds):f.odds,
+      bankroll:ctx.bankroll||f.bankroll,
+      commission:ctx.commission||f.commission,
+    }));
+  }
   const isLay=form.betType==="lay";
   const Q=(parseFloat(form.bankroll)+parseFloat(form.target))/parseFloat(form.bankroll);
   const coeff=Math.pow(Q,1/parseInt(form.events));
@@ -965,7 +996,18 @@ function PnLTool(){
     stake:ctx.pnlStake||20,
     commission:ctx.commission||5,
   });
+  const[lastCtxKey,setLastCtxKey]=useState(null);
   const set=(k,v)=>setForm(f=>({...f,[k]:v}));
+  const ctxKey=ctx.selectedScore?`${ctx.selectedScore.h}-${ctx.selectedScore.a}-${ctx.selectedOdds}`:"none";
+  if(ctxKey!==lastCtxKey&&ctxKey!=="none"){
+    setLastCtxKey(ctxKey);
+    setForm(f=>({
+      ...f,
+      openOdds:ctx.pnlOpenOdds||ctx.selectedOdds?parseFloat(ctx.pnlOpenOdds||ctx.selectedOdds):f.openOdds,
+      stake:ctx.pnlStake||f.stake,
+      commission:ctx.commission||f.commission,
+    }));
+  }
   const isBack=form.betType==="back";
   const qOpen=parseFloat(form.openOdds),qCurr=parseFloat(form.currentOdds);
   const stake=parseFloat(form.stake),comm=parseFloat(form.commission)/100;
