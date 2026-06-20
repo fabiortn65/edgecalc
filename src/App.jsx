@@ -1,15 +1,15 @@
 
 /* ─── TOKENS ─────────────────────────────────────────────────── */
 const C = {
-  bg:"#070E1C", sidebar:"#0A1528", card:"#0D1E3A",
-  border:"#162847", borderBright:"#1E3D6B",
-  accent:"#00C2FF", accentGlow:"#00C2FF44",
-  profit:"#00FF9D", profitGlow:"#00FF9D33",
-  loss:"#FF4757", lossGlow:"#FF475733",
-  warn:"#FFB800", warnGlow:"#FFB80033",
-  purple:"#A78BFA", orange:"#FB923C",
-  text:"#E8F4FF", textSec:"#6A90B8", textDim:"#334D6E",
-  guideB:"#081510", guideBor:"#1A4A2A",
+  bg:"#080C12", sidebar:"#0A1018", card:"#0D1520",
+  border:"#1A2535", borderBright:"#243648",
+  accent:"#00C896", accentGlow:"#00C89633",
+  profit:"#10B981", profitGlow:"#10B98125",
+  loss:"#EF4444", lossGlow:"#EF444425",
+  warn:"#F59E0B", warnGlow:"#F59E0B25",
+  purple:"#8B5CF6", orange:"#F97316",
+  text:"#F1F5F9", textSec:"#64859E", textDim:"#2E4055",
+  guideB:"#060E0A", guideBor:"#1A3D2A",
 };
 
 /* ─── GLOBAL CONTEXT ─────────────────────────────────────────── */
@@ -38,11 +38,12 @@ const defaultCtx = {
 };
 
 const globalCSS = `
-  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap');
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Inter, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: #070E1C; }
-  ::-webkit-scrollbar-thumb { background: #1E3D6B; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb { background: #243648; border-radius: 3px; }
   @keyframes gridMove { from{background-position:0 0} to{background-position:0 60px} }
   @keyframes pulseGlow { 0%,100%{opacity:.4} 50%{opacity:.9} }
   @keyframes fadeInUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
@@ -59,8 +60,8 @@ const globalCSS = `
 function GridBackground() {
   return (
     <div style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:0,overflow:"hidden"}}>
-      <div style={{position:"absolute",inset:0,backgroundImage:`linear-gradient(${C.border}44 1px,transparent 1px),linear-gradient(90deg,${C.border}44 1px,transparent 1px)`,backgroundSize:"60px 60px",animation:"gridMove 8s linear infinite",opacity:.35}}/>
-      <div style={{position:"absolute",top:-200,left:-200,width:600,height:600,borderRadius:"50%",background:`radial-gradient(circle,${C.accentGlow} 0%,transparent 70%)`,animation:"pulseGlow 4s ease-in-out infinite"}}/>
+      <div style={{position:"absolute",inset:0,backgroundImage:`linear-gradient(${C.border}55 1px,transparent 1px),linear-gradient(90deg,${C.border}55 1px,transparent 1px)`,backgroundSize:"60px 60px",animation:"gridMove 8s linear infinite",opacity:.35}}/>
+      <div style={{position:"absolute",top:-200,left:-200,width:600,height:600,borderRadius:"50%",background:`radial-gradient(circle,${C.accentGlow} 0%,transparent 65%)`,animation:"pulseGlow 4s ease-in-out infinite"}}/>
       <div style={{position:"absolute",bottom:-200,right:-200,width:500,height:500,borderRadius:"50%",background:`radial-gradient(circle,#1A3A6A88 0%,transparent 70%)`,animation:"pulseGlow 6s ease-in-out infinite"}}/>
       <div style={{position:"absolute",top:"40%",right:"10%",width:300,height:300,borderRadius:"50%",background:`radial-gradient(circle,${C.profitGlow} 0%,transparent 70%)`,animation:"pulseGlow 5s ease-in-out infinite 1s"}}/>
       <div style={{position:"absolute",inset:0,background:"radial-gradient(ellipse at center,transparent 40%,#070E1Caa 100%)"}}/>
@@ -76,20 +77,28 @@ const IconKelly = () => (<svg width="16" height="16" viewBox="0 0 24 24" fill="n
 const IconDutch = () => (<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M18 20V10M12 20V4M6 20v-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>);
 const IconMasa = () => (<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><polyline points="2,18 8,10 13,14 20,5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><circle cx="20" cy="5" r="2" fill="currentColor"/><line x1="2" y1="21" x2="22" y2="21" stroke="currentColor" strokeWidth="1.5" opacity=".4"/></svg>);
 const IconPnL = () => (<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="2" y="3" width="20" height="14" rx="2" stroke="currentColor" strokeWidth="1.8"/><path d="M8 21h8M12 17v4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/><path d="M7 10l3 3 2-2 3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>);
-const IconDelta = () => (<svg width="26" height="26" viewBox="0 0 32 32" fill="none"><polygon points="16,3 30,28 2,28" stroke="#00C2FF" strokeWidth="2" fill="none" strokeLinejoin="round"/><polygon points="16,10 24,25 8,25" fill="#00C2FF" opacity=".15"/><line x1="16" y1="13" x2="16" y2="21" stroke="#00C2FF" strokeWidth="1.5" opacity=".7"/><circle cx="16" cy="23" r="1.5" fill="#00C2FF" opacity=".7"/></svg>);
+const IconDelta = () => (
+  <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+    <rect x="2" y="2" width="28" height="28" rx="7" fill="#00C896" opacity=".12"/>
+    <rect x="2" y="2" width="28" height="28" rx="7" stroke="#00C896" strokeWidth="1.2" opacity=".4"/>
+    <text x="7" y="23" fontFamily="Inter" fontWeight="800" fontSize="18" fill="#00C896" opacity=".95">L</text>
+    <circle cx="23" cy="20" r="3" fill="#00C896" opacity=".7"/>
+    <circle cx="23" cy="20" r="1.5" fill="#00C896"/>
+  </svg>
+);
 
 /* ─── SHARED COMPONENTS ──────────────────────────────────────── */
 const card = {background:C.card,border:`1px solid ${C.border}`,borderRadius:10,padding:"20px 22px",position:"relative",overflow:"hidden"};
 const cardDeco = (color) => ({position:"absolute",top:0,right:0,width:120,height:120,borderRadius:"50%",background:`radial-gradient(circle,${color}12 0%,transparent 70%)`,pointerEvents:"none"});
-const inputStyle = {width:"100%",background:"#050D1A",border:`1px solid ${C.border}`,borderRadius:6,color:C.text,padding:"9px 12px",fontSize:14,fontFamily:"'JetBrains Mono',monospace",outline:"none",boxSizing:"border-box",marginBottom:12,transition:"border .15s"};
+const inputStyle = {width:"100%",background:"#060D16",border:`1px solid ${C.border}`,borderRadius:6,color:C.text,padding:"9px 12px",fontSize:14,fontFamily:"'JetBrains Mono',monospace",outline:"none",boxSizing:"border-box",marginBottom:12,transition:"border .15s"};
 const btnStyle = (color=C.accent) => ({width:"100%",background:color,color:"#040C1A",border:"none",borderRadius:6,padding:"10px 20px",fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:"inherit",transition:"all .15s",marginTop:4});
-const statBox = (color=C.accent) => ({background:"#050D1A",border:`1px solid ${C.border}`,borderRadius:6,padding:"10px 12px",marginBottom:8});
+const statBox = (color=C.accent) => ({background:"#060D16",border:`1px solid ${C.border}`,borderRadius:6,padding:"10px 12px",marginBottom:8});
 
 const PageHeader = ({icon, title, sub, color=C.accent}) => (
   <div style={{marginBottom:20}}>
     <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:4}}>
       <div style={{color,filter:`drop-shadow(0 0 8px ${color})`}}>{icon}</div>
-      <div style={{fontSize:24,fontWeight:700,fontFamily:"'JetBrains Mono',monospace"}}>{title}</div>
+      <div style={{fontSize:24,fontWeight:800,fontFamily:"Inter,sans-serif",letterSpacing:'-0.3px'}}>{title}</div>
     </div>
     <div style={{fontSize:13,color:C.textSec}}>{sub}</div>
   </div>
@@ -137,7 +146,7 @@ function StrategyPage(){
         <div style={cardDeco(C.accent)}/>
         <div style={{display:"flex",gap:20,alignItems:"flex-start"}}>
           <div style={{fontSize:48,lineHeight:1}}>🧠</div>
-          <div><div style={{fontSize:20,fontWeight:700,fontFamily:"'JetBrains Mono',monospace",marginBottom:6}}>Il Metodo EdgeCalc</div><div style={{fontSize:14,color:C.textSec,lineHeight:1.75,maxWidth:700}}>Il betting intelligente non è fortuna — è <span style={{color:C.accent,fontWeight:600}}>matematica applicata al mercato</span>. Scommetti solo quando la quota è più alta del fair value calcolato dal modello. Questo vantaggio si chiama <em style={{color:C.profit}}>edge</em> e, se costante, genera profitto nel lungo periodo.</div></div>
+          <div><div style={{fontSize:20,fontWeight:700,fontFamily:"'JetBrains Mono',monospace",marginBottom:6}}>Il Metodo LayLab</div><div style={{fontSize:14,color:C.textSec,lineHeight:1.75,maxWidth:700}}>Il betting intelligente non è fortuna — è <span style={{color:C.accent,fontWeight:600}}>matematica applicata al mercato</span>. Scommetti solo quando la quota è più alta del fair value calcolato dal modello. Questo vantaggio si chiama <em style={{color:C.profit}}>edge</em> e, se costante, genera profitto nel lungo periodo.</div></div>
         </div>
       </div>
       <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12,marginBottom:16}}>
@@ -191,7 +200,7 @@ function StrategyPage(){
         <div style={cardDeco(C.accent)}/>
         <div style={{display:"flex",gap:10,alignItems:"center",marginBottom:16}}><span style={{fontSize:20}}>⚽</span><div><div style={{fontSize:15,fontWeight:700}}>Atletico Madrid - Juventus</div><div style={{fontSize:12,color:C.textSec}}>Champions League — gara difensiva</div></div></div>
         <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginBottom:16}}>
-          {[["xG Casa","0.95",C.accent],["xG Ospite","0.88",C.accent],["Quota CS 0-0","9.40",C.warn]].map(([l,v,c])=>(<div key={l} style={{background:"#050D1A",border:`1px solid ${C.border}`,borderRadius:6,padding:"10px 12px"}}><div style={{fontSize:10,color:C.textDim,marginBottom:3}}>{l}</div><div style={{fontFamily:"monospace",fontSize:16,fontWeight:700,color:c}}>{v}</div></div>))}
+          {[["xG Casa","0.95",C.accent],["xG Ospite","0.88",C.accent],["Quota CS 0-0","9.40",C.warn]].map(([l,v,c])=>(<div key={l} style={{background:"#060D16",border:`1px solid ${C.border}`,borderRadius:6,padding:"10px 12px"}}><div style={{fontSize:10,color:C.textDim,marginBottom:3}}>{l}</div><div style={{fontFamily:"monospace",fontSize:16,fontWeight:700,color:c}}>{v}</div></div>))}
         </div>
         {[{step:1,tool:"CS Matrix",color:C.purple,items:[["Prob. CS 0-0","14.8%"],["Quota fair","6.76"],["Quota Betfair","9.40"],["Edge","+2.24% ✅"]]},{step:2,tool:"Value Finder",color:C.profit,items:[["EV netto (comm 5%)","€13.20"],["ROI atteso","+13.2%"],["Verdetto","VALUE BET ✅"],["Breakeven","10.6%"]]},{step:3,tool:"Kelly (½)",color:C.orange,items:[["Edge stimato","13.2%"],["Kelly intero","6.8%"],["Kelly ½","3.4%"],["Stake su €800","€27.20"]]},{step:4,tool:"Masaniello",color:C.accent,items:[["Step corrente","3 di 10"],["Stake calcolata","€18.50"],["Bank attuale","€780"],["Target residuo","€142"]]}].map(s=>(<div key={s.step} style={{background:"#070E1C",border:`1px solid ${s.color}30`,borderRadius:8,padding:"14px 16px",marginBottom:10}}><div style={{display:"flex",gap:10,alignItems:"center",marginBottom:10}}><span style={{padding:"3px 8px",background:`${s.color}15`,border:`1px solid ${s.color}30`,borderRadius:4,fontSize:11,color:s.color,fontFamily:"monospace"}}>STEP {s.step} → {s.tool}</span></div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>{s.items.map(([l,v])=>(<div key={l} style={{display:"flex",justifyContent:"space-between",padding:"4px 0",borderBottom:`1px solid ${C.border}20`}}><span style={{fontSize:12,color:C.textSec}}>{l}</span><span style={{fontFamily:"monospace",fontSize:12,color:v.includes("✅")?C.profit:C.text,fontWeight:600}}>{v}</span></div>))}</div></div>))}
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginTop:4}}>
@@ -374,7 +383,7 @@ function CorrectScoreTool(){
               </div>
             </div>
           ))}
-          <div style={{fontSize:11,color:C.textDim,marginBottom:8,padding:"6px 10px",background:"#050D1A",borderRadius:5}}>
+          <div style={{fontSize:11,color:C.textDim,marginBottom:8,padding:"6px 10px",background:"#060D16",borderRadius:5}}>
             λ aggiustata: <span style={{color:C.accent,fontFamily:"monospace"}}>{getLambdas().lH.toFixed(2)}</span> vs <span style={{color:C.accent,fontFamily:"monospace"}}>{getLambdas().lA.toFixed(2)}</span>
           </div>
           <button className="ec-btn" onClick={calc} style={btnStyle()}>Calcola →</button>
@@ -459,7 +468,7 @@ function CorrectScoreTool(){
                 const edgeU=getOUEdge(line,"U");
                 const edgeO=getOUEdge(line,"O");
                 return(
-                  <div key={line} style={{background:"#050D1A",border:`1px solid ${C.border}`,borderRadius:8,padding:"12px 10px"}}>
+                  <div key={line} style={{background:"#060D16",border:`1px solid ${C.border}`,borderRadius:8,padding:"12px 10px"}}>
                     <div style={{fontFamily:"monospace",fontSize:13,fontWeight:700,color:C.accent,textAlign:"center",marginBottom:10}}>{line} Gol</div>
                     {[["Under",probU,edgeU,"U"],["Over",probO,edgeO,"O"]].map(([lbl,prob,edge,type])=>(
                       <div key={lbl} style={{marginBottom:10}}>
@@ -470,7 +479,7 @@ function CorrectScoreTool(){
                         <div style={{height:3,background:C.border,borderRadius:2,marginBottom:5}}><div style={{height:3,width:pct(prob),background:type==="U"?C.accent:C.purple,borderRadius:2}}/></div>
                         <div style={{fontSize:10,color:C.textDim,marginBottom:3}}>Fair: {f2(1/prob)}</div>
                         <input placeholder="Quota BF" value={ouOdds[`${type}${line}`]||""} onChange={e=>setOuOdds(o=>({...o,[`${type}${line}`]:e.target.value}))}
-                          style={{width:"100%",fontSize:11,background:"#07101F",border:`1px solid ${edge!==null&&edge>0?C.profit:C.border}`,borderRadius:4,color:"#fff",padding:"4px 6px",textAlign:"center",fontFamily:"monospace",outline:"none",boxSizing:"border-box",marginBottom:4}}/>
+                          style={{width:"100%",fontSize:11,background:"#060D16",border:`1px solid ${edge!==null&&edge>0?C.profit:C.border}`,borderRadius:4,color:"#fff",padding:"4px 6px",textAlign:"center",fontFamily:"monospace",outline:"none",boxSizing:"border-box",marginBottom:4}}/>
                         {edge!==null&&(
                           <div style={{textAlign:"center",padding:"3px 0",background:edge>0?`${C.profit}15`:`${C.loss}15`,border:`1px solid ${edge>0?C.profit:C.loss}30`,borderRadius:4}}>
                             <span style={{fontFamily:"monospace",fontSize:11,fontWeight:700,color:edge>0?C.profit:C.loss}}>{edge>0?"+":""}{edge.toFixed(2)}%</span>
@@ -543,13 +552,13 @@ function CorrectScoreTool(){
                 <div style={{fontSize:11,color:C.textDim,letterSpacing:2,textTransform:"uppercase",marginBottom:12}}>Lambda live aggiornati</div>
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
                   {[["λ Casa (orig.)",parseFloat(form.lambdaH).toFixed(2),C.textSec],["λ Ospite (orig.)",parseFloat(form.lambdaA).toFixed(2),C.textSec],["λ Casa (live)",getLambdas().lH.toFixed(2),C.accent],["λ Ospite (live)",getLambdas().lA.toFixed(2),C.accent]].map(([lbl,val,col])=>(
-                    <div key={lbl} style={{background:"#050D1A",border:`1px solid ${C.border}`,borderRadius:6,padding:"8px 10px"}}>
+                    <div key={lbl} style={{background:"#060D16",border:`1px solid ${C.border}`,borderRadius:6,padding:"8px 10px"}}>
                       <div style={{fontSize:10,color:C.textDim,marginBottom:2}}>{lbl}</div>
                       <div style={{fontFamily:"monospace",fontSize:16,fontWeight:700,color:col}}>{val}</div>
                     </div>
                   ))}
                 </div>
-                <div style={{marginTop:10,fontSize:12,color:C.textSec,lineHeight:1.6,padding:"8px 10px",background:"#050D1A",borderRadius:5}}>
+                <div style={{marginTop:10,fontSize:12,color:C.textSec,lineHeight:1.6,padding:"8px 10px",background:"#060D16",borderRadius:5}}>
                   I lambda live combinano i dati storici (40%) con il ritmo di tiri del match (60%) proiettati sui minuti rimanenti.
                 </div>
               </div>
@@ -634,7 +643,7 @@ function ValueFinderTool(){
             <div style={cardDeco(C.profit)}/>
             <div style={{fontSize:11,color:C.textDim,letterSpacing:2,textTransform:"uppercase",marginBottom:12}}>Metriche</div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-              {[["EV",`€ ${f2(ev)}`,ev>=0?C.profit:C.loss],["ROI",`${(roi*100).toFixed(2)}%`,roi>=0?C.profit:C.loss],["Edge",`${(edge*100).toFixed(2)}%`,edge>=0?C.profit:C.loss],["Breakeven",pct(be),C.warn],["Prob. stimata",pct(prob),C.accent],["Prob. implicita",pct(impl),C.textSec],["Fair Back",f2(fairB),C.accent],["Fair Lay",f2(fairL),C.warn]].map(([lbl,val,col])=>(<div key={lbl} style={{background:"#050D1A",border:`1px solid ${C.border}`,borderRadius:6,padding:"9px 11px"}}><div style={{fontSize:10,color:C.textDim,marginBottom:3}}>{lbl}</div><div style={{fontFamily:"monospace",fontSize:15,fontWeight:700,color:col}}>{val}</div></div>))}
+              {[["EV",`€ ${f2(ev)}`,ev>=0?C.profit:C.loss],["ROI",`${(roi*100).toFixed(2)}%`,roi>=0?C.profit:C.loss],["Edge",`${(edge*100).toFixed(2)}%`,edge>=0?C.profit:C.loss],["Breakeven",pct(be),C.warn],["Prob. stimata",pct(prob),C.accent],["Prob. implicita",pct(impl),C.textSec],["Fair Back",f2(fairB),C.accent],["Fair Lay",f2(fairL),C.warn]].map(([lbl,val,col])=>(<div key={lbl} style={{background:"#060D16",border:`1px solid ${C.border}`,borderRadius:6,padding:"9px 11px"}}><div style={{fontSize:10,color:C.textDim,marginBottom:3}}>{lbl}</div><div style={{fontFamily:"monospace",fontSize:15,fontWeight:700,color:col}}>{val}</div></div>))}
             </div>
           </div>
         </div>
@@ -710,7 +719,7 @@ function KellyTool(){
           <div style={cardDeco(C.orange)}/>
           <div style={{fontSize:11,color:C.textDim,letterSpacing:2,textTransform:"uppercase",marginBottom:16}}>Parametri</div>
           {[["Bankroll (€)","bankroll","10"],["Quota Betfair","odds","0.1"],["Probabilità stimata (%)","probPct","0.1"],["Commissione (%)","commission","0.5"]].map(([lbl,key,step])=>(<div key={key}><label style={{fontSize:12,color:C.textSec,marginBottom:5,display:"block"}}>{lbl}</label><input className="ec-input" style={inputStyle} type="number" step={step} value={form[key]} onChange={e=>set(key,e.target.value)}/></div>))}
-          <div style={{background:"#050D1A",border:`1px solid ${C.border}`,borderRadius:6,padding:"12px",marginTop:4}}>
+          <div style={{background:"#060D16",border:`1px solid ${C.border}`,borderRadius:6,padding:"12px",marginTop:4}}>
             <div style={{fontSize:10,color:C.textDim,marginBottom:6}}>FORMULA KELLY</div>
             <div style={{fontFamily:"monospace",fontSize:12,color:C.textSec,lineHeight:1.8}}>
               f = (b × p − q) / b<br/>
@@ -727,7 +736,7 @@ function KellyTool(){
             <div style={{fontSize:11,color:C.textDim,letterSpacing:2,textTransform:"uppercase",marginBottom:14}}>Stake consigliate</div>
             <div style={{display:"flex",flexDirection:"column",gap:10}}>
               {[["Kelly Intero (1x)","Massima crescita teorica — alta varianza",kellyFull,stakesFull,C.loss,"⚠️ Aggressivo"],[  "Kelly ½","Consigliato — buon equilibrio crescita/rischio",kellyHalf,stakesHalf,C.warn,"✅ Consigliato"],["Kelly ¼","Conservativo — bassa varianza, crescita più lenta",kellyQuarter,stakesQuarter,C.profit,"🛡️ Conservativo"]].map(([label,desc,pctVal,stake,color,badge])=>(
-                <div key={label} style={{background:"#050D1A",border:`1px solid ${color}30`,borderRadius:8,padding:"12px 14px"}}>
+                <div key={label} style={{background:"#060D16",border:`1px solid ${color}30`,borderRadius:8,padding:"12px 14px"}}>
                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
                     <div style={{fontSize:13,fontWeight:700,color}}>{label}</div>
                     <span style={{padding:"2px 7px",background:`${color}15`,border:`1px solid ${color}30`,borderRadius:3,fontSize:10,color,fontFamily:"monospace"}}>{badge}</span>
@@ -747,7 +756,7 @@ function KellyTool(){
             <div style={cardDeco(C.orange)}/>
             <div style={{fontSize:11,color:C.textDim,letterSpacing:2,textTransform:"uppercase",marginBottom:10}}>Riepilogo EV</div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-              {[["Kelly (frazione intera)",`${(kellyFull*100).toFixed(2)}%`,C.orange],["EV per scommessa",`${ev>0?"+":""}${ev.toFixed(2)}%`,evColor],["Quota netta (b)",f2(b),C.accent],["Breakeven",pct(1/q),C.warn]].map(([lbl,val,col])=>(<div key={lbl} style={{background:"#050D1A",border:`1px solid ${C.border}`,borderRadius:6,padding:"9px 11px"}}><div style={{fontSize:10,color:C.textDim,marginBottom:3}}>{lbl}</div><div style={{fontFamily:"monospace",fontSize:14,fontWeight:700,color:col}}>{val}</div></div>))}
+              {[["Kelly (frazione intera)",`${(kellyFull*100).toFixed(2)}%`,C.orange],["EV per scommessa",`${ev>0?"+":""}${ev.toFixed(2)}%`,evColor],["Quota netta (b)",f2(b),C.accent],["Breakeven",pct(1/q),C.warn]].map(([lbl,val,col])=>(<div key={lbl} style={{background:"#060D16",border:`1px solid ${C.border}`,borderRadius:6,padding:"9px 11px"}}><div style={{fontSize:10,color:C.textDim,marginBottom:3}}>{lbl}</div><div style={{fontFamily:"monospace",fontSize:14,fontWeight:700,color:col}}>{val}</div></div>))}
             </div>
           </div>
         </div>
@@ -816,7 +825,7 @@ function DutchingTool(){
               {selections.length<6&&<button onClick={addSel} style={{background:`${C.purple}20`,border:`1px solid ${C.purple}40`,color:C.purple,borderRadius:5,padding:"4px 12px",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>+ Aggiungi</button>}
             </div>
             {selections.map((s,i)=>(
-              <div key={s.id} style={{background:"#050D1A",border:`1px solid ${editingId===s.id?C.purple:C.border}`,borderRadius:7,padding:"10px 12px",marginBottom:8,transition:"border .2s"}}>
+              <div key={s.id} style={{background:"#060D16",border:`1px solid ${editingId===s.id?C.purple:C.border}`,borderRadius:7,padding:"10px 12px",marginBottom:8,transition:"border .2s"}}>
                 <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:8}}>
                   <div style={{width:20,height:20,borderRadius:"50%",background:`${C.purple}20`,border:`1px solid ${C.purple}40`,color:C.purple,fontSize:10,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{i+1}</div>
                   <input
@@ -830,7 +839,7 @@ function DutchingTool(){
                 </div>
                 {/* Preset picker — appare quando il campo è in focus o vuoto */}
                 {(editingId===s.id||!s.name)&&(
-                  <div style={{background:"#07101F",border:`1px solid ${C.purple}30`,borderRadius:6,padding:"10px",marginBottom:8,animation:"fadeInUp .15s ease"}}>
+                  <div style={{background:"#060D16",border:`1px solid ${C.purple}30`,borderRadius:6,padding:"10px",marginBottom:8,animation:"fadeInUp .15s ease"}}>
                     <div style={{fontSize:10,color:C.purple,fontWeight:700,letterSpacing:1,textTransform:"uppercase",marginBottom:8}}>Selezione rapida</div>
                     {PRESETS.map(group=>(
                       <div key={group.group} style={{marginBottom:8}}>
@@ -868,7 +877,7 @@ function DutchingTool(){
               {guaranteedProfit>0?"Qualunque selezione vinca, incassi sempre questo importo":"Aggiusta le quote o la stake per ottenere profitto positivo"}
             </div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginTop:14}}>
-              {[["Stake totale",`€ ${f2(totalAllocated)}`,C.accent],["Overround",`${overround}%`,parseFloat(overround)<110?C.profit:C.loss],["ROI",`${f2(guaranteedProfit/total*100)}%`,guaranteedProfit>0?C.profit:C.loss],["Selezioni",selections.length,C.purple]].map(([lbl,val,col])=>(<div key={lbl} style={{background:"#050D1A",border:`1px solid ${C.border}`,borderRadius:6,padding:"8px 10px"}}><div style={{fontSize:10,color:C.textDim,marginBottom:2}}>{lbl}</div><div style={{fontFamily:"monospace",fontSize:14,fontWeight:700,color:col}}>{val}</div></div>))}
+              {[["Stake totale",`€ ${f2(totalAllocated)}`,C.accent],["Overround",`${overround}%`,parseFloat(overround)<110?C.profit:C.loss],["ROI",`${f2(guaranteedProfit/total*100)}%`,guaranteedProfit>0?C.profit:C.loss],["Selezioni",selections.length,C.purple]].map(([lbl,val,col])=>(<div key={lbl} style={{background:"#060D16",border:`1px solid ${C.border}`,borderRadius:6,padding:"8px 10px"}}><div style={{fontSize:10,color:C.textDim,marginBottom:2}}>{lbl}</div><div style={{fontFamily:"monospace",fontSize:14,fontWeight:700,color:col}}>{val}</div></div>))}
             </div>
           </div>
 
@@ -967,7 +976,7 @@ function MasanielloTool(){
             <div style={cardDeco(C.profit)}/>
             <div style={{fontSize:11,color:C.textDim,letterSpacing:2,textTransform:"uppercase",marginBottom:14}}>Riepilogo</div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
-              {[["Q^(1/n)",f4(coeff),C.accent],["Target",`€${parseFloat(form.target).toFixed(0)}`,C.profit],["Tipo",isLay?"LAY":"BACK",isLay?C.warn:C.accent],["Quota",form.odds,C.text]].map(([lbl,val,col])=>(<div key={lbl} style={{background:"#050D1A",border:`1px solid ${C.border}`,borderRadius:6,padding:"10px 12px"}}><div style={{fontSize:10,color:C.textDim,marginBottom:4}}>{lbl}</div><div style={{fontFamily:"monospace",fontSize:18,fontWeight:700,color:col}}>{val}</div></div>))}
+              {[["Q^(1/n)",f4(coeff),C.accent],["Target",`€${parseFloat(form.target).toFixed(0)}`,C.profit],["Tipo",isLay?"LAY":"BACK",isLay?C.warn:C.accent],["Quota",form.odds,C.text]].map(([lbl,val,col])=>(<div key={lbl} style={{background:"#060D16",border:`1px solid ${C.border}`,borderRadius:6,padding:"10px 12px"}}><div style={{fontSize:10,color:C.textDim,marginBottom:4}}>{lbl}</div><div style={{fontFamily:"monospace",fontSize:18,fontWeight:700,color:col}}>{val}</div></div>))}
             </div>
             {steps.length>0&&<StakeBarChart steps={steps}/>}
           </div>
@@ -1066,7 +1075,7 @@ function PnLTool(){
             <label style={{fontSize:12,color:C.textSec,marginBottom:5,display:"block"}}>Quota corrente Betfair</label>
             <input className="ec-input" style={inputStyle} type="number" step="0.1" value={form.currentOdds} onChange={e=>set("currentOdds",e.target.value)}/>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginTop:4}}>
-              {[["Movimento quota",`${oddsMove>0?"-":"+"} ${Math.abs(oddsMove)}%`,positionInProfit?C.profit:C.loss],["Posizione",positionInProfit?"IN PROFITTO":"IN PERDITA",positionInProfit?C.profit:C.loss]].map(([lbl,val,col])=>(<div key={lbl} style={{background:"#050D1A",border:`1px solid ${col}30`,borderRadius:6,padding:"8px 10px"}}><div style={{fontSize:10,color:C.textDim,marginBottom:2}}>{lbl}</div><div style={{fontFamily:"monospace",fontSize:13,fontWeight:700,color:col}}>{val}</div></div>))}
+              {[["Movimento quota",`${oddsMove>0?"-":"+"} ${Math.abs(oddsMove)}%`,positionInProfit?C.profit:C.loss],["Posizione",positionInProfit?"IN PROFITTO":"IN PERDITA",positionInProfit?C.profit:C.loss]].map(([lbl,val,col])=>(<div key={lbl} style={{background:"#060D16",border:`1px solid ${col}30`,borderRadius:6,padding:"8px 10px"}}><div style={{fontSize:10,color:C.textDim,marginBottom:2}}>{lbl}</div><div style={{fontFamily:"monospace",fontSize:13,fontWeight:700,color:col}}>{val}</div></div>))}
             </div>
           </div>
         </div>
@@ -1080,11 +1089,11 @@ function PnLTool(){
                 <div style={{textAlign:"right",flexShrink:0}}><div style={{fontSize:10,color:C.textDim,marginBottom:2}}>Azione</div><div style={{fontFamily:"monospace",fontSize:12,color:C.text,fontWeight:600}}>{s.stakeAction}</div></div>
               </div>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-                <div style={{background:"#050D1A",border:`1px solid ${C.profit}30`,borderRadius:6,padding:"10px 12px"}}>
+                <div style={{background:"#060D16",border:`1px solid ${C.profit}30`,borderRadius:6,padding:"10px 12px"}}>
                   <div style={{fontSize:10,color:C.textDim,marginBottom:3}}>Se la tua selezione vince</div>
                   <div style={{fontFamily:"monospace",fontSize:18,fontWeight:700,color:s.ifWins>=0?C.profit:C.loss}}>{s.ifWins>=0?"+":""}€{f2(s.ifWins)}</div>
                 </div>
-                <div style={{background:"#050D1A",border:`1px solid ${C.loss}30`,borderRadius:6,padding:"10px 12px"}}>
+                <div style={{background:"#060D16",border:`1px solid ${C.loss}30`,borderRadius:6,padding:"10px 12px"}}>
                   <div style={{fontSize:10,color:C.textDim,marginBottom:3}}>Se la tua selezione perde</div>
                   <div style={{fontFamily:"monospace",fontSize:18,fontWeight:700,color:s.ifLoses>=0?C.profit:C.loss}}>{s.ifLoses>=0?"+":""}€{f2(s.ifLoses)}</div>
                 </div>
@@ -1118,7 +1127,7 @@ const SECTIONS={
 
 /* ─── FREEMIUM TRIAL ─────────────────────────────────────────── */
 function getTrialInfo(){
-  const key="edgecalc_trial_start";
+  const key="LayLab_trial_start";
   let start=localStorage.getItem(key);
   if(!start){start=Date.now().toString();localStorage.setItem(key,start);}
   const daysLeft=Math.max(0,14-Math.floor((Date.now()-parseInt(start))/(1000*60*60*24)));
@@ -1135,10 +1144,10 @@ function TrialBanner({daysLeft,expired}){
       <div style={{background:C.card,border:`1px solid ${C.borderBright}`,borderRadius:12,padding:"40px 48px",maxWidth:440,textAlign:"center"}}>
         <div style={{fontSize:36,marginBottom:16}}>🔒</div>
         <div style={{fontSize:20,fontWeight:700,fontFamily:"monospace",color:C.text,marginBottom:8}}>Trial scaduto</div>
-        <div style={{fontSize:14,color:C.textSec,lineHeight:1.7,marginBottom:24}}>Il tuo periodo gratuito di 14 giorni è terminato. Passa a Pro per sbloccare tutti i tool e continuare a usare il metodo EdgeCalc.</div>
+        <div style={{fontSize:14,color:C.textSec,lineHeight:1.7,marginBottom:24}}>Il tuo periodo gratuito di 14 giorni è terminato. Passa a Pro per sbloccare tutti i tool e continuare a usare il metodo LayLab.</div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:20}}>
           {[["Free","Strategia + CS Matrix + Value Finder",C.textSec],["Pro €9/mese","Tutti i tool + storico scommesse",C.accent],["Premium €19/mese","Pro + alert Telegram + dati live",C.profit]].map(([plan,desc,col])=>(
-            <div key={plan} style={{background:"#050D1A",border:`1px solid ${col}30`,borderRadius:8,padding:"12px",textAlign:"left",gridColumn:plan==="Free"?"1/3":"auto"}}>
+            <div key={plan} style={{background:"#060D16",border:`1px solid ${col}30`,borderRadius:8,padding:"12px",textAlign:"left",gridColumn:plan==="Free"?"1/3":"auto"}}>
               <div style={{fontFamily:"monospace",fontSize:13,fontWeight:700,color:col,marginBottom:4}}>{plan}</div>
               <div style={{fontSize:11,color:C.textSec}}>{desc}</div>
             </div>
@@ -1184,13 +1193,13 @@ export default function App(){
   return(
     <>
       <style>{globalCSS}</style>
-      <div style={{display:"flex",height:"100vh",width:"100%",background:C.bg,fontFamily:"'Inter',system-ui,sans-serif",color:C.text,overflow:"hidden",position:"relative"}}>
+      <div style={{display:"flex",height:"100vh",width:"100%",background:C.bg,fontFamily:"Inter,system-ui,sans-serif",color:C.text,overflow:"hidden",position:"relative"}}>
         <GridBackground/>
         <div style={{width:220,minWidth:220,background:`${C.sidebar}EE`,borderRight:`1px solid ${C.border}`,display:"flex",flexDirection:"column",padding:"0 0 12px 0",overflow:"hidden",position:"relative",zIndex:2,backdropFilter:"blur(8px)"}}>
           <div style={{padding:"18px 20px 14px",borderBottom:`1px solid ${C.border}`}}>
             <div style={{display:"flex",alignItems:"center",gap:10}}>
               <IconDelta/>
-              <div><div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:17,fontWeight:700,color:C.accent,textShadow:`0 0 20px ${C.accent}66`}}>EdgeCalc</div><div style={{fontSize:9,color:C.textDim,letterSpacing:2.5,textTransform:"uppercase",marginTop:1}}>Exchange Tools</div></div>
+              <div><div style={{fontFamily:"Inter,sans-serif",fontSize:19,fontWeight:800,color:C.accent,letterSpacing:'-0.5px'}}>LayLab</div><div style={{fontSize:10,color:C.textSec,letterSpacing:1.5,textTransform:"uppercase",marginTop:2,fontWeight:500}}>Exchange Tools</div></div>
             </div>
           </div>
           <div style={{flex:1,overflowY:"auto",paddingBottom:8}}>
@@ -1205,11 +1214,11 @@ export default function App(){
               </div>
             ))}
           </div>
-          <div style={{margin:"0 10px 8px",background:`${C.profit}08`,border:`1px solid ${C.profit}20`,borderRadius:6,padding:"8px 10px"}}>
+          <div style={{margin:"0 10px 8px",background:`${C.profit}0A`,border:`1px solid ${C.profit}25`,borderRadius:6,padding:"8px 10px"}}>
             <div style={{fontSize:9,color:C.profit,fontWeight:700,marginBottom:4,letterSpacing:1}}>FLUSSO CORRETTO</div>
             {["① CS Matrix","② Value Finder","③ Kelly / Dutching","④ Masaniello","⑤ P&L Simulator (live)"].map((s,i)=>(<div key={i} style={{fontSize:10,color:C.textSec,padding:"1px 0"}}>{s}</div>))}
           </div>
-          <div style={{padding:"0 10px"}}><div style={{background:`${C.accent}10`,border:`1px solid ${C.border}`,borderRadius:6,padding:"5px 10px"}}><div style={{fontFamily:"monospace",fontSize:10,color:C.accent}}>v3.1 — 7 tools</div></div></div>
+          <div style={{padding:"0 10px"}}><div style={{background:`${C.accent}10`,border:`1px solid ${C.border}`,borderRadius:6,padding:"5px 10px"}}><div style={{fontFamily:"monospace",fontSize:10,color:C.accent}}>v4.0</div></div></div>
         </div>
 
         {/* Main */}
