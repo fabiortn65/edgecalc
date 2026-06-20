@@ -1036,7 +1036,7 @@ function PnLTool(){
     const partialIfBackLoses=layPartial*(1-comm)-stake;
     scenarios=[
       {label:"Hold completo",icon:"⏳",desc:"Mantieni la posizione fino al fischio finale",stakeAction:"Nessuna azione",ifWins:winIfHold,ifLoses:lossIfHold,color:C.warn},
-      {label:"Green completo",icon:"✅",desc:"Lay per distribuire il profitto su entrambi gli esiti",stakeAction:`Lay €${f2(layRounded)} @ ${qCurr}`,ifWins:greenIfBackWins,ifLoses:greenIfBackLoses,color:C.profit},
+      {label:"Green completo",icon:"✅",desc:"Lay per bilanciare il profitto — piccola differenza per rounding €0.50",stakeAction:`Lay €${f2(layRounded)} @ ${qCurr}`,ifWins:greenIfBackWins,ifLoses:greenIfBackLoses,guaranteed:(greenIfBackWins+greenIfBackLoses)/2,color:C.profit},
       {label:"Green parziale (70%)",icon:"⚖️",desc:"Garantisci parte del profitto, lascia qualcosa aperto",stakeAction:`Lay €${f2(layPartial)} @ ${qCurr}`,ifWins:partialIfBackWins,ifLoses:partialIfBackLoses,color:C.accent},
     ];
   } else {
@@ -1088,6 +1088,12 @@ function PnLTool(){
                 <div><div style={{display:"flex",gap:8,alignItems:"center",marginBottom:4}}><span style={{fontSize:18}}>{s.icon}</span><div style={{fontSize:14,fontWeight:700,color:s.color}}>{s.label}</div></div><div style={{fontSize:12,color:C.textSec}}>{s.desc}</div></div>
                 <div style={{textAlign:"right",flexShrink:0}}><div style={{fontSize:10,color:C.textDim,marginBottom:2}}>Azione</div><div style={{fontFamily:"monospace",fontSize:12,color:C.text,fontWeight:600}}>{s.stakeAction}</div></div>
               </div>
+              {s.guaranteed!==undefined&&(
+                <div style={{marginBottom:10,padding:"8px 12px",background:`${C.profit}10`,border:`1px solid ${C.profit}30`,borderRadius:6,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                  <div><div style={{fontSize:12,color:C.profit,fontWeight:600}}>Profitto medio garantito</div><div style={{fontSize:10,color:C.textDim,marginTop:2}}>Lieve differenza tra i due scenari dovuta al rounding €0.50 Betfair</div></div>
+                  <div style={{fontFamily:"monospace",fontSize:20,fontWeight:700,color:C.profit,marginLeft:16}}>{s.guaranteed>=0?"+":""}€{f2(s.guaranteed)}</div>
+                </div>
+              )}
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
                 <div style={{background:"#060D16",border:`1px solid ${C.profit}30`,borderRadius:6,padding:"10px 12px"}}>
                   <div style={{fontSize:10,color:C.textDim,marginBottom:3}}>Se la tua selezione vince</div>
