@@ -239,6 +239,26 @@ body::before{content:'';position:fixed;inset:0;
 </style>
 </head>
 <body>
+<style>
+.ll-navbar{position:fixed;top:0;left:0;right:0;z-index:9999;height:44px;background:rgba(8,12,20,0.92);backdrop-filter:blur(14px);border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;padding:0 20px;gap:16px;font-family:-apple-system,"Inter","Segoe UI",sans-serif}
+.ll-back{display:flex;align-items:center;gap:6px;color:#6b7fa3;text-decoration:none;font-size:12px;font-weight:600;transition:color .15s}
+.ll-back:hover{color:#e8edf5}
+.ll-back svg{width:14px;height:14px;flex-shrink:0}
+.ll-divider{width:1px;height:18px;background:rgba(255,255,255,0.1)}
+.ll-logo{font-family:monospace;font-size:13px;font-weight:800;color:#e8edf5;text-decoration:none;letter-spacing:-.3px}
+.ll-logo span{color:#3b82f6}
+.ll-tool-name{font-size:11px;font-weight:600;color:#3d4f6e;text-transform:uppercase;letter-spacing:.8px;margin-left:4px}
+body{padding-top:54px!important}
+</style>
+<div class="ll-navbar">
+  <a href="https://www.laylab.cc" class="ll-back">
+    <svg viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 2L4 7L9 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Home
+  </a>
+  <div class="ll-divider"></div>
+  <a href="https://www.laylab.cc" class="ll-logo">Lay<span>Lab</span></a>
+  <span class="ll-tool-name">Lay Draw + Dutching</span>
+</div>
 
 <!-- HEADER -->
 <div class="header">

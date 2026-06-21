@@ -189,25 +189,31 @@ input[type=range]::-webkit-slider-thumb:hover { transform:scale(1.25); }
 footer { text-align:center; padding:18px; font-size:11px; color:var(--text-3);
   border-top:1px solid var(--border); margin-top:36px; }
 
-/* RECOMMENDATION PANEL */
-.rec-panel { display:flex; flex-direction:column; gap:7px; }
-.rec-item { border-radius:9px; padding:10px 13px; border-left:3px solid; display:flex; align-items:flex-start; gap:10px; }
-.ri-green { background:rgba(16,185,129,0.07); border-color:var(--green); }
-.ri-amber { background:rgba(245,158,11,0.07); border-color:var(--amber); }
-.ri-red   { background:rgba(239,68,68,0.07);  border-color:var(--red); }
-.ri-wait  { background:rgba(59,130,246,0.07); border-color:var(--blue); }
-.ri-fire  { background:rgba(245,166,35,0.1);  border-color:var(--gold); }
-.ri-neu   { background:var(--glass);          border-color:var(--text-3); }
-.rec-icon   { font-size:18px; line-height:1; flex-shrink:0; padding-top:1px; }
-.rec-market { font-size:9px; font-weight:800; letter-spacing:.8px; text-transform:uppercase; color:var(--text-3); margin-bottom:1px; }
-.rec-title  { font-size:12px; font-weight:700; margin-bottom:3px; }
-.rec-detail { font-size:10px; color:var(--text-2); line-height:1.55; }
-
 @media(max-width:900px){ .grid2{grid-template-columns:1fr;} .grid5{grid-template-columns:1fr 1fr;} }
 @media(max-width:580px){ .grid2b,.grid3{grid-template-columns:1fr 1fr;} .main{padding:14px 14px 36px;} }
 </style>
 </head>
 <body>
+<style>
+.ll-navbar{position:fixed;top:0;left:0;right:0;z-index:9999;height:44px;background:rgba(8,12,20,0.92);backdrop-filter:blur(14px);border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;padding:0 20px;gap:16px;font-family:-apple-system,"Inter","Segoe UI",sans-serif}
+.ll-back{display:flex;align-items:center;gap:6px;color:#6b7fa3;text-decoration:none;font-size:12px;font-weight:600;transition:color .15s}
+.ll-back:hover{color:#e8edf5}
+.ll-back svg{width:14px;height:14px;flex-shrink:0}
+.ll-divider{width:1px;height:18px;background:rgba(255,255,255,0.1)}
+.ll-logo{font-family:monospace;font-size:13px;font-weight:800;color:#e8edf5;text-decoration:none;letter-spacing:-.3px}
+.ll-logo span{color:#3b82f6}
+.ll-tool-name{font-size:11px;font-weight:600;color:#3d4f6e;text-transform:uppercase;letter-spacing:.8px;margin-left:4px}
+body{padding-top:54px!important}
+</style>
+<div class="ll-navbar">
+  <a href="https://www.laylab.cc" class="ll-back">
+    <svg viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 2L4 7L9 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Home
+  </a>
+  <div class="ll-divider"></div>
+  <a href="https://www.laylab.cc" class="ll-logo">Lay<span>Lab</span></a>
+  <span class="ll-tool-name">Under / Over Copertura</span>
+</div>
 
 <header class="header">
   <div class="header-inner">
@@ -407,14 +413,6 @@ footer { text-align:center; padding:18px; font-size:11px; color:var(--text-3);
 
 <!-- ══════ COLONNA DESTRA — RISULTATI ══════ -->
 <div>
-
-  <!-- RECOMMENDATION ENGINE -->
-  <div class="card" style="border-color:rgba(245,166,35,.35);background:rgba(245,166,35,0.02);">
-    <div class="ct"><span class="cti ic-gold">🔮</span> Consigli intelligenti — quando entrare &nbsp;<span style="font-size:9px;color:var(--text-3);font-weight:400;text-transform:none;letter-spacing:0;">basato su 67 partite Betfair</span></div>
-    <div id="rec-panel" class="rec-panel">
-      <div class="rec-item ri-neu"><span class="rec-icon">⏳</span><div class="rec-body"><div class="rec-title">Inserisci le quote per vedere i consigli →</div></div></div>
-    </div>
-  </div>
 
   <!-- QUOTE MINIME -->
   <div class="card" style="border-color:rgba(245,166,35,.3);">
@@ -656,9 +654,6 @@ function setQbox(id, qCur, qMin, scName) {
    CALCOLO PRINCIPALE
 ═══════════════════════════════════════════════════════ */
 function calc() {
-  /* RACCOMANDAZIONI */
-  updateRec();
-
   /* INPUT */
   const S1 = +document.getElementById('s1').value || 0;
   const S2 = +document.getElementById('s2').value || 0;
@@ -946,116 +941,6 @@ function autoBilancia() {
 
   // Ricalcola tutto con le nuove puntate
   calc();
-}
-
-/* ═══════════════════════════════════════════════════════
-   RECOMMENDATION ENGINE
-   Basato su analisi di 67 partite reali Betfair Exchange
-   ─────────────────────────────────────────────────────
-   Quote medie storiche con punteggio 0-0:
-   Under 1.5: avg pre-match=4.00 → CALA durante il match
-              min 10'=3.53 · 20'=2.70 · 30'=2.29 · 45'=1.75
-   Over 2.5:  avg pre-match=2.01 → SALE durante 0-0
-              min 10'=2.29 · 20'=2.78 · 30'=3.32 · 45'=5.37 · 60'=11.62
-   Esatto 1-1: avg pre-match=8.40 → SCENDE leggermente (7.1 a 20'), poi RISALE
-              min 20'=7.12 · 30'=7.36 · 45'=8.28 · 60'=11.28
-   2-0/0-2:   avg pre-match=13.37/27.99 · molto volatile
-═══════════════════════════════════════════════════════ */
-function getRec(market, q) {
-  if (!q || q <= 1.01) return {icon:'—', cls:'ri-neu', market:'', title:'Nessuna quota inserita', detail:''};
-  const m = {
-    u15:'💙 Under 1.5',
-    o25:'🟡 Over 2.5',
-    e11:'🎯 Esatto 1-1',
-    e20:'🔴 2-0 / 0-2'
-  };
-  switch(market) {
-    case 'u15':
-      if (q >= 3.50) return {icon:'✅', cls:'ri-green', market:m.u15,
-        title:'Entra SUBITO pre-match',
-        detail:'Quota eccellente (media storica 4.0). La Under 1.5 CALA con ogni minuto: a 20\' sarà ~2.7, a 30\' ~2.3, a 45\' ~1.75. Non aspettare mai il live.'};
-      if (q >= 2.80) return {icon:'✅', cls:'ri-green', market:m.u15,
-        title:'Entra pre-match',
-        detail:'Quota nella norma. Entra prima del fischio — la quota è in discesa costante (calo medio −11% ogni 10 minuti di gioco senza gol).'};
-      if (q >= 2.20) return {icon:'⚠️', cls:'ri-amber', market:m.u15,
-        title:'Entra ora con cautela',
-        detail:'Quota bassa rispetto alla media storica (4.0). Entra comunque ora: aspettare peggiorerà ulteriormente la situazione — la quota scende sempre.'};
-      return {icon:'❌', cls:'ri-red', market:m.u15,
-        title:'Rinuncia — quota troppo bassa',
-        detail:'Media storica Betfair: 4.0. Con questa quota il margine non copre i rischi della strategia. Cerca una partita con Under 1.5 più alta.'};
-
-    case 'o25':
-      if (q >= 5.00) return {icon:'🔥', cls:'ri-fire', market:m.o25,
-        title:'Entra SUBITO — quota eccezionale!',
-        detail:'Storicamente raggiunta solo a 40-50\' con 0-0. Copertura 3+ gol al massimo della convenienza. Entra ora, non aspettare oltre.'};
-      if (q >= 3.00) return {icon:'✅', cls:'ri-green', market:m.o25,
-        title:'Ottima quota — entra ora',
-        detail:'Zona 25-40\' con 0-0 (storico: 3.0≈25\', 3.3≈30\', 4.0≈37\'). Momento ideale per entrare. Vale molto di più del pre-match (avg 2.0).'};
-      if (q >= 2.30) return {icon:'✅', cls:'ri-green', market:m.o25,
-        title:'Buona quota live — entra',
-        detail:'Zona 10-20\' con 0-0. Se vuoi ottimizzare, a 30\' sarà ~3.3. Ma questa è già una buona entry: il pre-match era solo 2.0.'};
-      if (q <= 2.10) return {icon:'⏳', cls:'ri-wait', market:m.o25,
-        title:'Aspetta ancora — troppo vicino al pre-match',
-        detail:'Sei a livello pre-match (avg 2.0). Aspetta almeno 20-30\' senza gol: la quota salirà a 2.8-3.3. Non bruciare il budget live ora.'};
-      return {icon:'⏳', cls:'ri-wait', market:m.o25,
-        title:'Aspetta un po\' di più',
-        detail:'Appena sopra il livello pre-match. A 20-25\' con 0-0 storicamente sarà ~2.7-2.9. Hai ancora qualche minuto per aspettare.'};
-
-    case 'e11':
-      if (q >= 8.00) return {icon:'✅', cls:'ri-green', market:m.e11,
-        title:'Entra subito pre-match',
-        detail:'Quota ottima (media storica 8.4). Live scende leggermente a 20\' (~7.1), poi risale da HT in poi. Il pre-match è il momento migliore.'};
-      if (q >= 7.00) return {icon:'✅', cls:'ri-green', market:m.e11,
-        title:'Entra pre-match — valore nella norma',
-        detail:'Valore accettabile (media storica 8.4). La quota live a 20\' può scendere fino a 7.0, poi risale. Conviene entrare ora pre-match.'};
-      if (q >= 6.00) return {icon:'⚠️', cls:'ri-amber', market:m.e11,
-        title:'Sotto media — valuta di aspettare',
-        detail:'Media storica 8.4. Da HT in poi la quota risale significativamente (8.3 a 45\', 11.3 a 60\'). Potresti aspettare il vivo per trovare una quota migliore.'};
-      return {icon:'❌', cls:'ri-red', market:m.e11,
-        title:'Rinuncia — quota insufficiente',
-        detail:'Troppo bassa rispetto alla media storica di 8.4. Con questo valore il rischio non è giustificato nella strategia.'};
-
-    case 'e20':
-      if (q >= 13.00) return {icon:'✅', cls:'ri-green', market:m.e20,
-        title:'In linea con la media — entra dopo il 1° gol',
-        detail:'Quota nella media storica (13.4 per 2-0). Entra subito dopo il gol: punta il 2-0 se segna la casa, lo 0-2 se segna l\'ospite.'};
-      if (q >= 10.00) return {icon:'✅', cls:'ri-green', market:m.e20,
-        title:'Accettabile — entra dopo il gol',
-        detail:'Leggermente sotto la media (13.4) ma utilizzabile. La quota post-gol dipende dal minuto: più tardi il gol, più alta la quota direzionale.'};
-      if (q >= 7.00) return {icon:'⚠️', cls:'ri-amber', market:m.e20,
-        title:'Quota bassa — valuta se entrare',
-        detail:'Sotto la media storica (13.4). Il rapporto rischio/rendimento è ridotto. Considera di saltare la puntata direzionale o ridurre la quota S4.'};
-      return {icon:'❌', cls:'ri-red', market:m.e20,
-        title:'Non entrare sul direzionale',
-        detail:'Quota insufficiente (media storica 2-0 = 13.4). Con questo valore il direzionale non copre il rischio degli altri mercati persi.'};
-  }
-  return {icon:'—', cls:'ri-neu', market:'', title:'', detail:''};
-}
-
-function updateRec() {
-  const Q1 = +document.getElementById('q1').value || 0;
-  const Q2 = +document.getElementById('q2').value || 0;
-  const Q3 = +document.getElementById('q3').value || 0;
-  const Q4 = +document.getElementById('q4').value || 0;
-
-  const recs = [
-    getRec('u15', Q1),
-    getRec('e11', Q3),
-    getRec('o25', Q2),
-    getRec('e20', Q4),
-  ];
-
-  const panel = document.getElementById('rec-panel');
-  panel.innerHTML = recs.map(r => `
-    <div class="rec-item ${r.cls}">
-      <span class="rec-icon">${r.icon}</span>
-      <div class="rec-body">
-        ${r.market ? `<div class="rec-market">${r.market}</div>` : ''}
-        <div class="rec-title">${r.title}</div>
-        ${r.detail ? `<div class="rec-detail">${r.detail}</div>` : ''}
-      </div>
-    </div>
-  `).join('');
 }
 
 /* INIT */
