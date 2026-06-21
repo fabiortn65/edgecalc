@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lay Draw + Dutching — Calcolatore Betfair Exchange</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+:root{
+  --bg:#080C14;--surface:#0E1521;--surface2:#141D2E;
+  --glass:rgba(255,255,255,0.04);--border:rgba(255,255,255,0.08);
+  --border-hi:rgba(255,255,255,0.16);
+  --gold:#F5A623;--gold-dim:rgba(245,166,35,0.15);
+  --green:#10B981;--green-dim:rgba(16,185,129,0.15);
+  --red:#EF4444;--red-dim:rgba(239,68,68,0.15);
+  --blue:#3B82F6;--blue-dim:rgba(59,130,246,0.15);
+  --amber:#F59E0B;--amber-dim:rgba(245,158,11,0.15);
+  --purple:#8B5CF6;--purple-dim:rgba(139,92,246,0.15);
+  --teal:#14B8A6;--teal-dim:rgba(20,184,166,0.15);
+  --orange:#F97316;--orange-dim:rgba(249,115,22,0.15);
+  --text:#F1F5F9;--text-2:#94A3B8;--text-3:#475569;
+  --r:10px;--r-lg:16px;--shadow:0 4px 24px rgba(0,0,0,0.4)
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+  background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.6}
+body::before{content:'';position:fixed;inset:0;
+  background-image:linear-gradient(rgba(255,255,255,0.015) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,0.015) 1px,transparent 1px);
+  background-size:40px 40px;pointer-events:none;z-index:0}
+
+/* HEADER */
+.header{position:sticky;top:0;z-index:100;background:rgba(8,12,20,0.94);
+  backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 24px}
+.header-inner{max-width:1340px;margin:0 auto;display:flex;align-items:center;gap:14px;height:54px}
+.logo-mark{width:34px;height:34px;background:linear-gradient(135deg,#EF4444,#991B1B);
+  border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;
+  box-shadow:0 0 18px rgba(239,68,68,0.3);flex-shrink:0}
+.logo-name{font-size:13px;font-weight:700}
+.logo-tag{font-size:10px;color:var(--text-2);letter-spacing:.6px;text-transform:uppercase}
+.hsp{flex:1}
+.badge{display:flex;align-items:center;gap:5px;border-radius:99px;padding:4px 11px;
+  font-size:10px;font-weight:700;letter-spacing:.4px}
+.badge-amber{background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);color:var(--amber)}
+.badge-blue{background:var(--blue-dim);border:1px solid rgba(59,130,246,.3);color:var(--blue)}
+.dot{width:6px;height:6px;border-radius:50%;background:currentColor;animation:blink 1.4s ease infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* STEPS */
+.steps{background:rgba(239,68,68,0.04);border-bottom:1px solid rgba(239,68,68,0.12);padding:0 24px}
+.steps-inner{max-width:1340px;margin:0 auto;display:flex;align-items:stretch;overflow-x:auto}
+.step{display:flex;align-items:center;gap:9px;padding:10px 16px;
+  border-right:1px solid rgba(255,255,255,0.06);flex-shrink:0}
+.step:last-child{border-right:none}
+.snum{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:10px;font-weight:800;flex-shrink:0}
+.sn1{background:var(--blue-dim);color:var(--blue)}
+.sn2{background:var(--red-dim);color:var(--red)}
+.sn3{background:var(--green-dim);color:var(--green)}
+.sn4{background:var(--amber-dim);color:var(--amber)}
+.st{font-size:11px;font-weight:700}
+.ss{font-size:9px;color:var(--text-3);margin-top:1px}
+
+/* LAYOUT */
+.main{max-width:1340px;margin:0 auto;padding:20px 24px 60px;position:relative;z-index:1}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px}
+.grid2b{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:900px){.grid2{grid-template-columns:1fr}}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);
+  padding:18px 20px;box-shadow:var(--shadow)}
+.card+.card{margin-top:12px}
+.ct{font-size:11px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;
+  color:var(--text-2);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.cti{width:24px;height:24px;border-radius:7px;display:flex;align-items:center;
+  justify-content:center;font-size:12px}
+.ic-gold{background:var(--gold-dim)} .ic-green{background:var(--green-dim)}
+.ic-blue{background:var(--blue-dim)} .ic-red{background:var(--red-dim)}
+.ic-amber{background:var(--amber-dim)} .ic-purple{background:var(--purple-dim)}
+.ic-teal{background:var(--teal-dim)} .ic-orange{background:var(--orange-dim)}
+
+/* INPUTS */
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:10px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;margin-bottom:10px}
+.row2:last-child,.row3:last-child{margin-bottom:0}
+.field{margin-bottom:10px}
+.field:last-child{margin-bottom:0}
+.fl{font-size:10px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;
+  color:var(--text-2);margin-bottom:5px;display:flex;justify-content:space-between;align-items:center}
+.fl-hint{font-size:9px;font-weight:500;letter-spacing:0;text-transform:none;color:var(--text-3)}
+.inp{width:100%;background:var(--surface2);border:1px solid var(--border-hi);
+  border-radius:var(--r);color:var(--text);font-size:16px;font-weight:700;
+  padding:9px 12px;outline:none;transition:border-color .2s,box-shadow .2s;font-family:inherit}
+.inp:focus{border-color:var(--gold);box-shadow:0 0 0 3px var(--gold-dim)}
+.inp-red:focus{border-color:var(--red);box-shadow:0 0 0 3px var(--red-dim)}
+.inp-blue:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-dim)}
+.inp-green:focus{border-color:var(--green);box-shadow:0 0 0 3px var(--green-dim)}
+.inp-teal:focus{border-color:var(--teal);box-shadow:0 0 0 3px var(--teal-dim)}
+.inp:disabled{opacity:.4;cursor:not-allowed}
+
+/* SCENARIO CARDS */
+.sc{border-radius:var(--r);padding:12px 10px;text-align:center;
+  background:var(--surface2);border:1px solid var(--border)}
+.sc-ico{font-size:20px;margin-bottom:3px}
+.sc-lbl{font-size:8px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;
+  color:var(--text-3);margin-bottom:6px;line-height:1.4}
+.sc-val{font-size:18px;font-weight:800;font-variant-numeric:tabular-nums}
+.sc-sub{font-size:9px;color:var(--text-3);margin-top:2px}
+.sc.win{border-color:rgba(16,185,129,.4);background:rgba(16,185,129,.06)}
+.sc.loss{border-color:rgba(239,68,68,.4);background:rgba(239,68,68,.06)}
+.sc.key{border-color:rgba(245,166,35,.5);background:rgba(245,166,35,.07);border-width:1.5px}
+.sc.neutral{border-color:rgba(59,130,246,.4);background:rgba(59,130,246,.06)}
+.sc.warn{border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.06)}
+
+/* P&L TABLE */
+.pnl-table{width:100%;border-collapse:collapse;font-size:12px}
+.pnl-table th{padding:8px 10px;text-align:left;font-size:9px;font-weight:700;
+  letter-spacing:.7px;text-transform:uppercase;color:var(--text-3);
+  border-bottom:1px solid var(--border)}
+.pnl-table td{padding:9px 10px;border-bottom:1px solid rgba(255,255,255,0.04)}
+.pnl-table tr:last-child td{border-bottom:none}
+.pnl-table tr:hover td{background:rgba(255,255,255,.02)}
+.pnl-scenario{font-weight:600;display:flex;align-items:center;gap:6px}
+.pnl-ico{font-size:14px}
+.pnl-val{font-weight:800;font-variant-numeric:tabular-nums;font-size:13px}
+.pnl-pos{color:var(--green)}
+.pnl-neg{color:var(--red)}
+.pnl-zero{color:var(--text-2)}
+.pnl-covered{font-size:9px;padding:2px 6px;border-radius:99px;margin-left:4px}
+.cov-yes{background:var(--teal-dim);color:var(--teal)}
+.cov-no{background:var(--red-dim);color:var(--red)}
+
+/* VERDICTS */
+.vd{border-radius:var(--r);padding:10px 14px;font-size:12px;font-weight:500;
+  display:flex;align-items:flex-start;gap:8px;line-height:1.6;margin-bottom:8px}
+.vd:last-child{margin-bottom:0}
+.v-green{background:var(--green-dim);border:1px solid rgba(16,185,129,.3);color:#34D399}
+.v-amber{background:var(--amber-dim);border:1px solid rgba(245,158,11,.3);color:#FCD34D}
+.v-red{background:var(--red-dim);border:1px solid rgba(239,68,68,.3);color:#F87171}
+.v-blue{background:var(--blue-dim);border:1px solid rgba(59,130,246,.3);color:#93C5FD}
+.v-purple{background:var(--purple-dim);border:1px solid rgba(139,92,246,.3);color:#C4B5FD}
+.v-teal{background:var(--teal-dim);border:1px solid rgba(20,184,166,.3);color:#5EEAD4}
+.vd-ico{font-size:16px;flex-shrink:0;margin-top:1px}
+
+/* STRATEGY CARDS */
+.strat{border-radius:var(--r-lg);padding:14px 16px;margin-bottom:10px;cursor:pointer;
+  transition:border-color .2s,background .2s}
+.strat:last-child{margin-bottom:0}
+.strat-conserv{background:rgba(59,130,246,.05);border:1.5px solid rgba(59,130,246,.25)}
+.strat-bilanc{background:rgba(16,185,129,.05);border:1.5px solid rgba(16,185,129,.3)}
+.strat-aggress{background:rgba(245,158,11,.05);border:1.5px solid rgba(245,158,11,.25)}
+.strat-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.strat-title{font-size:12px;font-weight:800;display:flex;align-items:center;gap:7px}
+.strat-badge{font-size:9px;font-weight:700;padding:2px 8px;border-radius:99px}
+.sb-blue{background:var(--blue-dim);color:var(--blue)}
+.sb-green{background:var(--green-dim);color:var(--green)}
+.sb-amber{background:var(--amber-dim);color:var(--amber)}
+.strat-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.sm{background:rgba(255,255,255,.03);border-radius:8px;padding:7px 9px;text-align:center}
+.sm-lbl{font-size:8px;color:var(--text-3);font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px}
+.sm-val{font-size:13px;font-weight:800;font-variant-numeric:tabular-nums}
+.sm-val.pos{color:var(--green)}
+.sm-val.neg{color:var(--red)}
+.sm-val.neu{color:var(--blue)}
+.sm-val.warn{color:var(--amber)}
+.strat-bets{margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.06)}
+.strat-bet-row{display:flex;align-items:center;justify-content:space-between;
+  font-size:11px;margin-bottom:5px}
+.strat-bet-row:last-child{margin-bottom:0}
+.strat-bet-lbl{color:var(--text-2);display:flex;align-items:center;gap:5px}
+.strat-bet-val{font-weight:800;font-variant-numeric:tabular-nums}
+.btn-apply{font-size:10px;font-weight:700;padding:3px 10px;border-radius:99px;border:none;
+  cursor:pointer;transition:.15s;letter-spacing:.3px}
+.btn-apply-blue{background:var(--blue-dim);color:var(--blue);border:1px solid rgba(59,130,246,.3)}
+.btn-apply-green{background:var(--green-dim);color:var(--green);border:1px solid rgba(16,185,129,.3)}
+.btn-apply-amber{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(245,158,11,.3)}
+.btn-apply:hover{filter:brightness(1.3)}
+
+/* METER BAR */
+.meter{background:var(--surface2);border-radius:99px;height:6px;overflow:hidden;margin-top:6px}
+.meter-fill{height:100%;border-radius:99px;transition:width .4s ease}
+.meter-green{background:linear-gradient(90deg,var(--green),#34D399)}
+.meter-amber{background:linear-gradient(90deg,var(--amber),#FCD34D)}
+.meter-red{background:linear-gradient(90deg,var(--red),#F87171)}
+.meter-blue{background:linear-gradient(90deg,var(--blue),#93C5FD)}
+
+/* RISK GAUGE */
+.gauge-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.gauge-label{font-size:10px;font-weight:700;color:var(--text-2);width:110px;flex-shrink:0}
+.gauge-bar{flex:1}
+.gauge-pct{font-size:11px;font-weight:800;width:42px;text-align:right;font-variant-numeric:tabular-nums}
+
+/* BETFAIR RULE BOX */
+.rule-box{background:rgba(245,166,35,.05);border:1px solid rgba(245,166,35,.2);
+  border-radius:var(--r);padding:12px 14px;font-size:11px;color:var(--text-2);line-height:1.7}
+.rule-box strong{color:var(--gold)}
+
+/* DUTCH DISTRIBUTION */
+.dutch-dist{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.dd-item{background:var(--surface2);border-radius:var(--r);padding:10px;text-align:center;
+  border:1px solid var(--border)}
+.dd-score{font-size:11px;font-weight:800;margin-bottom:4px}
+.dd-stake{font-size:18px;font-weight:800;font-variant-numeric:tabular-nums;margin:3px 0}
+.dd-return{font-size:9px;color:var(--text-3)}
+.dd-prob{font-size:9px;margin-top:4px;padding:2px 6px;border-radius:99px;display:inline-block}
+.dd-00{border-color:rgba(239,68,68,.3)} .dd-00 .dd-score{color:var(--red)}
+.dd-11{border-color:rgba(245,158,11,.3)} .dd-11 .dd-score{color:var(--amber)}
+.dd-22{border-color:rgba(59,130,246,.3)} .dd-22 .dd-score{color:var(--blue)}
+
+/* OVERALL RATING */
+.rating-badge{display:inline-flex;align-items:center;gap:8px;border-radius:99px;
+  padding:6px 16px;font-size:13px;font-weight:800;letter-spacing:.5px}
+.rating-optimal{background:rgba(16,185,129,.12);border:1.5px solid rgba(16,185,129,.4);color:var(--green)}
+.rating-good{background:rgba(245,166,35,.12);border:1.5px solid rgba(245,166,35,.4);color:var(--gold)}
+.rating-risky{background:rgba(245,158,11,.12);border:1.5px solid rgba(245,158,11,.4);color:var(--amber)}
+.rating-danger{background:rgba(239,68,68,.12);border:1.5px solid rgba(239,68,68,.4);color:var(--red)}
+
+/* SEPARATOR */
+.sep{height:1px;background:var(--border);margin:14px 0}
+
+/* RESPONSIVE TWEAKS */
+@media(max-width:600px){
+  .strat-metrics{grid-template-columns:1fr 1fr}
+  .strat-head{flex-direction:column;align-items:flex-start;gap:6px}
+  .grid3{grid-template-columns:1fr 1fr}
+  .main{padding:12px 14px 40px}
+}
+
+/* COMMISSION PILL */
+.comm-pill{display:inline-flex;align-items:center;gap:5px;background:rgba(139,92,246,.1);
+  border:1px solid rgba(139,92,246,.25);border-radius:99px;padding:3px 10px;
+  font-size:10px;font-weight:700;color:var(--purple)}
+
+/* ANIMATE IN */
+.fade-in{animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-inner">
+    <div class="logo-mark">🎯</div>
+    <div>
+      <div class="logo-name">Lay Draw + Dutching</div>
+      <div class="logo-tag">Calcolatore Betfair Exchange</div>
+    </div>
+    <div class="hsp"></div>
+    <div class="badge badge-amber"><span class="dot"></span>LIVE CALC</div>
+    <div class="badge badge-blue">Exchange</div>
+  </div>
+</div>
+
+<!-- STEPS -->
+<div class="steps">
+  <div class="steps-inner">
+    <div class="step">
+      <div class="snum sn1">1</div>
+      <div><div class="st">Quote Pre-Match</div><div class="ss">Inserisci le quote dal file Excel</div></div>
+    </div>
+    <div class="step">
+      <div class="snum sn2">2</div>
+      <div><div class="st">Puntata Lay</div><div class="ss">Lay del pareggio su Betfair</div></div>
+    </div>
+    <div class="step">
+      <div class="snum sn3">3</div>
+      <div><div class="st">Dutching 0-0 / 1-1 / 2-2</div><div class="ss">Copertura parziale draw</div></div>
+    </div>
+    <div class="step">
+      <div class="snum sn4">4</div>
+      <div><div class="st">Analisi & Consigli</div><div class="ss">P&amp;L e raccomandazioni</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="grid2">
+
+    <!-- ===== LEFT COLUMN: INPUTS ===== -->
+    <div>
+
+      <!-- CONFIGURAZIONE -->
+      <div class="card">
+        <div class="ct"><div class="cti ic-purple">⚙️</div>Configurazione</div>
+        <div class="row2">
+          <div class="field">
+            <div class="fl">Bankroll (€) <span class="fl-hint">opzionale</span></div>
+            <input class="inp" id="bankroll" type="number" min="10" step="10" value="200" placeholder="200">
+          </div>
+          <div class="field">
+            <div class="fl">Commissione Betfair <span class="fl-hint">standard 5%</span></div>
+            <input class="inp" id="commission" type="number" min="0" max="10" step="0.5" value="5" placeholder="5">
+          </div>
+        </div>
+        <div class="rule-box">
+          <strong>Regole Betfair Exchange:</strong> Puntata minima <strong>€1,00</strong> — Incrementi di <strong>€0,50</strong>
+          (es. €1,00 → €1,50 → €2,00 → €2,50 …)
+        </div>
+      </div>
+
+      <!-- QUOTE PRE-MATCH -->
+      <div class="card">
+        <div class="ct"><div class="cti ic-gold">📊</div>Quote Pre-Partita</div>
+        <div class="row3">
+          <div class="field">
+            <div class="fl">HOME (1X2)</div>
+            <input class="inp" id="q_home" type="number" min="1.01" step="0.05" value="2.00" placeholder="2.00">
+          </div>
+          <div class="field">
+            <div class="fl">DRAW (Pareggio)</div>
+            <input class="inp inp-red" id="q_draw" type="number" min="1.01" step="0.05" value="3.50" placeholder="3.50">
+          </div>
+          <div class="field">
+            <div class="fl">AWAY (1X2)</div>
+            <input class="inp" id="q_away" type="number" min="1.01" step="0.05" value="4.20" placeholder="4.20">
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <div class="fl">Over 2.5 Goals</div>
+            <input class="inp inp-teal" id="q_over25" type="number" min="1.01" step="0.05" value="1.90" placeholder="1.90">
+          </div>
+          <div class="field">
+            <div class="fl">Under 2.5 Goals</div>
+            <input class="inp" id="q_under25" type="number" min="1.01" step="0.05" value="2.00" placeholder="2.00">
+          </div>
+        </div>
+        <div class="sep"></div>
+        <div style="font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text-3);margin-bottom:10px;">Quote Risultato Esatto (per Dutching)</div>
+        <div class="row3">
+          <div class="field">
+            <div class="fl" style="color:var(--red)">0 — 0</div>
+            <input class="inp inp-red" id="q_00" type="number" min="1.01" step="0.05" value="7.00" placeholder="7.00">
+          </div>
+          <div class="field">
+            <div class="fl" style="color:var(--amber)">1 — 1</div>
+            <input class="inp inp-red" id="q_11" type="number" min="1.01" step="0.05" value="9.50" placeholder="9.50">
+          </div>
+          <div class="field">
+            <div class="fl" style="color:var(--blue)">2 — 2</div>
+            <input class="inp inp-blue" id="q_22" type="number" min="1.01" step="0.05" value="21.00" placeholder="21.00">
+          </div>
+        </div>
+        <div id="implied-probs" style="margin-top:10px"></div>
+      </div>
+
+      <!-- LAY PAREGGIO -->
+      <div class="card">
+        <div class="ct"><div class="cti ic-red">🔴</div>Puntata Lay — Banca il Pareggio</div>
+        <div class="field">
+          <div class="fl">Lay Stake (€) <span class="fl-hint">quanto vuoi VINCERE se non c'è pareggio</span></div>
+          <input class="inp inp-red" id="lay_stake" type="number" min="1" step="0.5" value="10" placeholder="10.00">
+        </div>
+        <div class="grid3" style="margin-top:10px" id="lay-summary">
+          <!-- filled by JS -->
+        </div>
+        <div class="rule-box" style="margin-top:10px;background:rgba(239,68,68,.05);border-color:rgba(239,68,68,.2)">
+          <strong>Come funziona:</strong> Fai il Lay del pareggio. Se una squadra vince → <strong style="color:var(--green)">incassi il lay stake</strong>. Se finisce in pareggio → <strong style="color:var(--red)">paghi la responsabilità</strong>.
+        </div>
+      </div>
+
+      <!-- DUTCHING -->
+      <div class="card">
+        <div class="ct"><div class="cti ic-blue">🛡️</div>Dutching — Copertura 0-0 / 1-1 / 2-2</div>
+        <div class="field">
+          <div class="fl">Puntata Dutch Totale (€) <span class="fl-hint">distribuita automaticamente</span></div>
+          <input class="inp inp-blue" id="dutch_total" type="number" min="0" step="0.5" value="5.00" placeholder="5.00">
+        </div>
+        <div id="dutch-dist" class="dutch-dist">
+          <!-- filled by JS -->
+        </div>
+        <div id="dutch-summary" style="margin-top:10px"></div>
+        <div class="rule-box" style="margin-top:10px;background:rgba(59,130,246,.05);border-color:rgba(59,130,246,.2)">
+          <strong>Come funziona:</strong> Punti su tutti e tre i risultati esatti. Se uno si verifica → incassi il Back vincente. La distribuzione è proporzionale alle quote per pareggiare il profitto tra i tre risultati.
+        </div>
+      </div>
+
+    </div><!-- end left column -->
+
+    <!-- ===== RIGHT COLUMN: RESULTS ===== -->
+    <div>
+
+      <!-- ANALISI MATCH -->
+      <div class="card">
+        <div class="ct"><div class="cti ic-gold">🔍</div>Analisi del Match</div>
+        <div id="match-rating" style="margin-bottom:14px"></div>
+        <div id="gauge-section"></div>
+      </div>
+
+      <!-- P&L SCENARIOS -->
+      <div class="card">
+        <div class="ct"><div class="cti ic-green">📈</div>Profitto &amp; Perdita per Scenario</div>
+        <table class="pnl-table" id="pnl-table">
+          <!-- filled by JS -->
+        </table>
+      </div>
+
+      <!-- METRICHE -->
+      <div class="card">
+        <div class="ct"><div class="cti ic-teal">⚖️</div>Metriche della Strategia</div>
+        <div class="grid3" id="metrics-grid">
+          <!-- filled by JS -->
+        </div>
+      </div>
+
+      <!-- STRATEGIE CONSIGLIATE -->
+      <div class="card">
+        <div class="ct"><div class="cti ic-purple">🎯</div>Strategie Consigliate</div>
+        <div id="strat-cards">
+          <!-- filled by JS -->
+        </div>
+      </div>
+
+      <!-- CONSIGLI -->
+      <div class="card">
+        <div class="ct"><div class="cti ic-amber">💡</div>Consigli &amp; Avvisi</div>
+        <div id="advice-panel">
+          <!-- filled by JS -->
+        </div>
+      </div>
+
+    </div><!-- end right column -->
+  </div><!-- end grid2 -->
+</div><!-- end main -->
+
+<script>
+// ========== UTILITY ==========
+function roundBetfair(v) {
+  if (v < 1) return 1;
+  return Math.round(v * 2) / 2;
+}
+function fmt(v, dec = 2) {
+  return (v >= 0 ? '+' : '') + v.toFixed(dec);
+}
+function fmtAbs(v, dec = 2) {
+  return '€' + Math.abs(v).toFixed(dec);
+}
+function eff(odds, comm) {
+  // Effective total return per unit: 1 + (odds-1)*(1-comm)
+  return 1 + (odds - 1) * (1 - comm);
+}
+function pct(v) { return (v * 100).toFixed(1) + '%'; }
+function impliedProb(odds) { return 1 / odds; }
+
+// ========== CORE CALCULATIONS ==========
+function calculate() {
+  const bankroll  = parseFloat(document.getElementById('bankroll').value)  || 200;
+  const commPct   = parseFloat(document.getElementById('commission').value) || 5;
+  const comm      = commPct / 100;
+
+  const qHome    = parseFloat(document.getElementById('q_home').value)   || 2.00;
+  const qDraw    = parseFloat(document.getElementById('q_draw').value)   || 3.50;
+  const qAway    = parseFloat(document.getElementById('q_away').value)   || 4.20;
+  const qOver25  = parseFloat(document.getElementById('q_over25').value) || 1.90;
+  const qUnder25 = parseFloat(document.getElementById('q_under25').value)|| 2.00;
+  const q00      = parseFloat(document.getElementById('q_00').value)     || 7.00;
+  const q11      = parseFloat(document.getElementById('q_11').value)     || 9.50;
+  const q22      = parseFloat(document.getElementById('q_22').value)     || 21.00;
+
+  const layStake  = parseFloat(document.getElementById('lay_stake').value) || 10;
+  const dutchTotal= parseFloat(document.getElementById('dutch_total').value)|| 5;
+
+  // --- LAY ---
+  const layLiability = layStake * (qDraw - 1);
+  const layWin       = layStake * (1 - comm); // winnings after comm if draw doesn't happen
+
+  // --- DUTCH DISTRIBUTION ---
+  const eff00  = eff(q00, comm);
+  const eff11  = eff(q11, comm);
+  const eff22  = eff(q22, comm);
+  const dutchSum = 1/eff00 + 1/eff11 + 1/eff22;
+
+  let s00 = dutchTotal / (eff00 * dutchSum);
+  let s11 = dutchTotal / (eff11 * dutchSum);
+  let s22 = dutchTotal / (eff22 * dutchSum);
+
+  // Round to Betfair increments
+  const s00r = roundBetfair(s00);
+  const s11r = roundBetfair(s11);
+  const s22r = roundBetfair(s22);
+  const dutchActual = s00r + s11r + s22r;
+
+  // Dutch return when winning leg hits (equal for all three with unrounded stakes)
+  const dutchReturn00 = s00r * eff00 - dutchActual;
+  const dutchReturn11 = s11r * eff11 - dutchActual;
+  const dutchReturn22 = s22r * eff22 - dutchActual;
+
+  // --- COMBINED P&L ---
+  const pnlTeamWins   =  layWin - dutchActual;           // Lay wins, Dutch all lost
+  const pnlDraw00     = -layLiability + dutchReturn00;   // Lay loses, 0-0 Dutch wins
+  const pnlDraw11     = -layLiability + dutchReturn11;   // Lay loses, 1-1 Dutch wins
+  const pnlDraw22     = -layLiability + dutchReturn22;   // Lay loses, 2-2 Dutch wins
+  const pnlOtherDraw  = -layLiability - dutchActual;     // Lay loses, Dutch all lost
+
+  // --- BREAK-EVEN DUTCH ---
+  const breakEvenDutch = dutchSum >= 1 ? 9999 :
+    layLiability * dutchSum / (1 - dutchSum);
+
+  // --- IMPLIED PROBABILITIES ---
+  const pDraw  = impliedProb(qDraw);
+  const pHome  = impliedProb(qHome);
+  const pAway  = impliedProb(qAway);
+  const pOver  = impliedProb(qOver25);
+  const p00    = impliedProb(q00);
+  const p11    = impliedProb(q11);
+  const p22    = impliedProb(q22);
+
+  // Coverage ratio: how much of the draw probability is covered by Dutch
+  const pDutchCover = p00 + p11 + p22;
+  const coverageRatio = pDutchCover / pDraw;
+
+  // --- RENDER ALL ---
+  renderImpliedProbs(qDraw, q00, q11, q22, p00, p11, p22, pDraw, pDutchCover);
+  renderLaySummary(layStake, layLiability, layWin, bankroll);
+  renderDutchDist(s00r, s11r, s22r, eff00, eff11, eff22, dutchActual, dutchReturn00, dutchReturn11, dutchReturn22, p00, p11, p22);
+  renderDutchSummary(dutchActual, breakEvenDutch, dutchSum);
+  renderMatchRating(qDraw, qOver25, q00, pDraw, pOver, p00);
+  renderGauges(qDraw, qOver25, q00, coverageRatio, breakEvenDutch, dutchActual, layLiability);
+  renderPnlTable(pnlTeamWins, pnlDraw00, pnlDraw11, pnlDraw22, pnlOtherDraw);
+  renderMetrics(layWin, layLiability, dutchActual, breakEvenDutch, pnlTeamWins, pnlDraw00, pnlOtherDraw, dutchSum, coverageRatio);
+  renderStrategyCards(qDraw, q00, q11, q22, comm, layLiability, bankroll, breakEvenDutch, dutchSum, layStake, layWin);
+  renderAdvice(qDraw, qOver25, q00, q11, q22, pDraw, pOver, p00, breakEvenDutch, dutchActual, layLiability, layWin, dutchReturn00, coverageRatio);
+}
+
+// ========== IMPLIED PROBS ==========
+function renderImpliedProbs(qDraw, q00, q11, q22, p00, p11, p22, pDraw, pTotal) {
+  const cov = (pTotal / pDraw * 100).toFixed(0);
+  document.getElementById('implied-probs').innerHTML = `
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <span style="font-size:9px;background:var(--red-dim);border:1px solid rgba(239,68,68,.25);
+        color:var(--red);padding:3px 9px;border-radius:99px;font-weight:700">
+        Draw ${(pDraw*100).toFixed(1)}%
+      </span>
+      <span style="font-size:9px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);
+        color:#F87171;padding:3px 9px;border-radius:99px;font-weight:700">
+        0-0 ${(p00*100).toFixed(1)}%
+      </span>
+      <span style="font-size:9px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);
+        color:var(--amber);padding:3px 9px;border-radius:99px;font-weight:700">
+        1-1 ${(p11*100).toFixed(1)}%
+      </span>
+      <span style="font-size:9px;background:var(--blue-dim);border:1px solid rgba(59,130,246,.2);
+        color:var(--blue);padding:3px 9px;border-radius:99px;font-weight:700">
+        2-2 ${(p22*100).toFixed(1)}%
+      </span>
+      <span style="font-size:9px;background:var(--teal-dim);border:1px solid rgba(20,184,166,.25);
+        color:var(--teal);padding:3px 9px;border-radius:99px;font-weight:700">
+        Copertura ${cov}% del draw
+      </span>
+    </div>`;
+}
+
+// ========== LAY SUMMARY ==========
+function renderLaySummary(stake, liability, win, bankroll) {
+  const liabPct = (liability / bankroll * 100).toFixed(1);
+  const items = [
+    { ico:'💰', lbl:'Responsabilità', val:'€'+liability.toFixed(2), cls: liability > bankroll*0.15 ? 'loss' : 'warn', col: liability > bankroll*0.15 ? 'var(--red)' : 'var(--amber)' },
+    { ico:'✅', lbl:'Vincita se squadra vince', val:'€'+win.toFixed(2), cls:'win', col:'var(--green)' },
+    { ico:'📊', lbl:'% del Bankroll a rischio', val:liabPct+'%', cls: parseFloat(liabPct)>20?'loss':parseFloat(liabPct)>10?'warn':'neutral', col: parseFloat(liabPct)>20?'var(--red)':parseFloat(liabPct)>10?'var(--amber)':'var(--blue)' },
+  ];
+  document.getElementById('lay-summary').innerHTML = items.map(i=>`
+    <div class="sc ${i.cls}">
+      <div class="sc-ico">${i.ico}</div>
+      <div class="sc-lbl">${i.lbl}</div>
+      <div class="sc-val" style="color:${i.col}">€${parseFloat(i.val.replace('€','').replace('%','')).toFixed(2)}${i.val.includes('%')?'%':''}</div>
+    </div>`).join('');
+}
+
+// ========== DUTCH DISTRIBUTION ==========
+function renderDutchDist(s00, s11, s22, e00, e11, e22, total, r00, r11, r22, p00, p11, p22) {
+  const items = [
+    { cls:'dd-00', score:'0 — 0', stake:s00, eff:e00, ret:r00, prob:p00, col:'var(--red)' },
+    { cls:'dd-11', score:'1 — 1', stake:s11, eff:e11, ret:r11, prob:p11, col:'var(--amber)' },
+    { cls:'dd-22', score:'2 — 2', stake:s22, eff:e22, ret:r22, prob:p22, col:'var(--blue)' },
+  ];
+  document.getElementById('dutch-dist').innerHTML = items.map(i=>`
+    <div class="dd-item ${i.cls}">
+      <div class="dd-score">${i.score}</div>
+      <div class="dd-stake" style="color:${i.col}">€${i.stake.toFixed(2)}</div>
+      <div class="dd-return">Ritorno netto: <strong style="color:${i.ret>=0?'var(--green)':'var(--red)'}">€${i.ret.toFixed(2)}</strong></div>
+      <div class="dd-prob" style="background:rgba(255,255,255,.05);color:var(--text-2)">Prob: ${(i.prob*100).toFixed(1)}%</div>
+    </div>`).join('');
+}
+
+// ========== DUTCH SUMMARY ==========
+function renderDutchSummary(actual, breakEven, dutchSum) {
+  const pct = breakEven < 9000 ? Math.min(100, actual/breakEven*100) : 100;
+  const color = pct >= 90 ? 'var(--green)' : pct >= 60 ? 'var(--amber)' : 'var(--red)';
+  document.getElementById('dutch-summary').innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;font-size:11px;margin-bottom:6px">
+      <span style="color:var(--text-2)">Copertura draw rispetto al break-even</span>
+      <strong style="color:${color}">${pct.toFixed(0)}%</strong>
+    </div>
+    <div class="meter"><div class="meter-fill ${pct>=90?'meter-green':pct>=60?'meter-amber':'meter-red'}" style="width:${Math.min(pct,100)}%"></div></div>
+    <div style="font-size:9px;color:var(--text-3);margin-top:5px">Break-even Dutch: €${breakEven<9000?breakEven.toFixed(2):'N/D'} — Dutch attuale: €${actual.toFixed(2)}</div>`;
+}
+
+// ========== MATCH RATING ==========
+function renderMatchRating(qDraw, qOver25, q00, pDraw, pOver, p00) {
+  let rating, cls, ico, desc;
+
+  if (qDraw < 3.0) {
+    rating = 'NON CONSIGLIATO'; cls = 'rating-danger'; ico = '🚫';
+    desc = 'Quota draw troppo bassa (< 3.0) — Pareggio molto probabile, rischio elevato per il Lay.';
+  } else if (qDraw < 3.5) {
+    rating = 'RISCHIOSO'; cls = 'rating-risky'; ico = '⚠️';
+    desc = 'Draw tra 3.0-3.5: possibile ma usa copertura massima con il Dutching.';
+  } else if (qDraw >= 3.5 && qDraw <= 5.0 && qOver25 < 2.0) {
+    rating = 'OTTIMALE'; cls = 'rating-optimal'; ico = '✅';
+    desc = 'Range ideale per Lay Draw. Aspettativa gol media, match propizio per la strategia.';
+  } else if (qDraw > 5.0 && q00 < 7) {
+    rating = 'ATTENZIONE 0-0'; cls = 'rating-risky'; ico = '⚠️';
+    desc = 'Draw improbabile ma quota 0-0 bassa: rischio blocco tattico. Potenzia il Dutch su 0-0.';
+  } else if (qDraw > 4.0) {
+    rating = 'BUONO'; cls = 'rating-good'; ico = '🟡';
+    desc = 'Draw improbabile, buona finestra per il Lay. Verifica aspettativa gol (Over 2.5).';
+  } else {
+    rating = 'BUONO'; cls = 'rating-good'; ico = '🟡';
+    desc = 'Match adatto. Quota draw nel range standard per il Lay Draw.';
+  }
+
+  document.getElementById('match-rating').innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:10px">
+      <div>
+        <div style="font-size:10px;color:var(--text-3);margin-bottom:4px">VALUTAZIONE MATCH PER LAY DRAW</div>
+        <div class="rating-badge ${cls}">${ico} ${rating}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:9px;color:var(--text-3)">Quota Draw</div>
+        <div style="font-size:22px;font-weight:800;color:var(--red)">${qDraw.toFixed(2)}</div>
+      </div>
+    </div>
+    <div class="vd v-blue"><span class="vd-ico">ℹ️</span><span>${desc}</span></div>`;
+}
+
+// ========== GAUGES ==========
+function renderGauges(qDraw, qOver25, q00, coverageRatio, breakEvenDutch, dutchActual, layLiability) {
+  const risk00 = Math.max(0, Math.min(100, (1 - (q00 - 4) / 16) * 100));
+  const coverPct = Math.min(100, coverageRatio * 100);
+  const dutchCoverPct = breakEvenDutch < 9000 ? Math.min(100, dutchActual / breakEvenDutch * 100) : 100;
+  const layRisk = Math.max(0, Math.min(100, (1 - (qDraw - 2.5) / 4) * 100));
+
+  const gauges = [
+    { lbl:'Rischio 0-0', pct:risk00, color: risk00>70?'meter-red':risk00>40?'meter-amber':'meter-green' },
+    { lbl:'Copertura draw', pct:coverPct, color: coverPct>80?'meter-green':coverPct>50?'meter-amber':'meter-red' },
+    { lbl:'Efficienza Dutch', pct:dutchCoverPct, color: dutchCoverPct>90?'meter-green':dutchCoverPct>60?'meter-amber':'meter-red' },
+    { lbl:'Rischio Lay', pct:layRisk, color: layRisk>70?'meter-red':layRisk>40?'meter-amber':'meter-green' },
+  ];
+
+  document.getElementById('gauge-section').innerHTML = gauges.map(g=>`
+    <div class="gauge-row">
+      <div class="gauge-label">${g.lbl}</div>
+      <div class="gauge-bar">
+        <div class="meter"><div class="meter-fill ${g.color}" style="width:${g.pct.toFixed(0)}%"></div></div>
+      </div>
+      <div class="gauge-pct" style="color:${g.color==='meter-green'?'var(--green)':g.color==='meter-red'?'var(--red)':'var(--amber)'}">${g.pct.toFixed(0)}%</div>
+    </div>`).join('');
+}
+
+// ========== P&L TABLE ==========
+function renderPnlTable(pTeamWins, p00, p11, p22, pOther) {
+  const rows = [
+    { ico:'⚽', scenario:'Squadra Vince (qualsiasi)', pnl:pTeamWins, covered:true, note:'Obiettivo principale' },
+    { ico:'0️⃣', scenario:'Pareggio 0 — 0', pnl:p00, covered:true, note:'Coperto dal Dutch' },
+    { ico:'1️⃣', scenario:'Pareggio 1 — 1', pnl:p11, covered:true, note:'Coperto dal Dutch' },
+    { ico:'2️⃣', scenario:'Pareggio 2 — 2', pnl:p22, covered:true, note:'Coperto dal Dutch' },
+    { ico:'❌', scenario:'Altro Pareggio (3-3, ecc.)', pnl:pOther, covered:false, note:'Non coperto' },
+  ];
+
+  document.getElementById('pnl-table').innerHTML = `
+    <thead><tr>
+      <th>Scenario</th>
+      <th style="text-align:right">P&amp;L</th>
+      <th style="text-align:right">Copertura</th>
+    </tr></thead>
+    <tbody>
+      ${rows.map(r=>`<tr>
+        <td><div class="pnl-scenario">
+          <span class="pnl-ico">${r.ico}</span>
+          <span>${r.scenario}</span>
+        </div><div style="font-size:9px;color:var(--text-3);margin-top:2px;padding-left:22px">${r.note}</div></td>
+        <td style="text-align:right">
+          <span class="pnl-val ${r.pnl>0.01?'pnl-pos':r.pnl<-0.01?'pnl-neg':'pnl-zero'}">
+            ${r.pnl>=0?'+':''}€${Math.abs(r.pnl).toFixed(2)}
+          </span>
+        </td>
+        <td style="text-align:right">
+          <span class="pnl-covered ${r.covered?'cov-yes':'cov-no'}">${r.covered?'✓ Coperto':'✗ Scoperto'}</span>
+        </td>
+      </tr>`).join('')}
+    </tbody>`;
+}
+
+// ========== METRICS ==========
+function renderMetrics(layWin, layLiability, dutchActual, breakEven, pTeamWins, pDraw, pOther, dutchSum, covRatio) {
+  const roi = layWin > 0 ? ((pTeamWins / (layLiability + dutchActual)) * 100) : 0;
+  const riskReward = layWin / (layLiability - dutchActual > 0 ? layLiability - dutchActual : layLiability);
+  const dutchEff = dutchSum < 1 ? (1/dutchSum - 1)*100 : 0;
+
+  const items = [
+    { lbl:'Profitto max (squadra vince)', val:'€'+pTeamWins.toFixed(2), cls: pTeamWins>0?'pos':'neg' },
+    { lbl:'Perdita max (altro draw)', val:'€'+Math.abs(pOther).toFixed(2), cls:'neg' },
+    { lbl:'Perdita su draw coperto', val:'€'+Math.abs(Math.min(pDraw,0)).toFixed(2), cls: pDraw>=0?'pos':'warn' },
+    { lbl:'Break-even Dutch', val:'€'+(breakEven<9000?breakEven.toFixed(2):'N/D'), cls:'neu' },
+    { lbl:'Efficienza Dutch', val:dutchEff.toFixed(1)+'%', cls: dutchEff>10?'pos':'warn' },
+    { lbl:'Copertura del Draw', val:(covRatio*100).toFixed(0)+'%', cls: covRatio>0.6?'pos':covRatio>0.35?'warn':'neg' },
+  ];
+
+  document.getElementById('metrics-grid').innerHTML = items.map(i=>`
+    <div class="sc">
+      <div class="sc-lbl">${i.lbl}</div>
+      <div class="sc-val ${i.cls}">${i.val}</div>
+    </div>`).join('');
+}
+
+// ========== STRATEGY CARDS ==========
+function renderStrategyCards(qDraw, q00, q11, q22, comm, layLiab, bankroll, breakEven, dutchSum, layStake, layWin) {
+  const riskUnit = bankroll * 0.02; // 2% bankroll
+
+  function buildStrat(name, badgeCls, sbCls, layMult, dutchMult, btnCls) {
+    // Lay stake: so liability = riskUnit * layMult
+    let recLay = roundBetfair(riskUnit * layMult / (qDraw - 1));
+    recLay = Math.max(1, recLay);
+    const recLiab = recLay * (qDraw - 1);
+    const recLayWin = recLay * (1 - comm);
+
+    // Break-even dutch for this lay
+    const be = dutchSum >= 1 ? 0 : recLiab * dutchSum / (1 - dutchSum);
+    let recDutch = roundBetfair(be * dutchMult);
+    recDutch = Math.max(0, recDutch);
+
+    // Distribute dutch
+    const e00 = eff(q00, comm), e11 = eff(q11, comm), e22 = eff(q22, comm);
+    const ds = 1/e00 + 1/e11 + 1/e22;
+    let rs00 = roundBetfair(recDutch / (e00 * ds));
+    let rs11 = roundBetfair(recDutch / (e11 * ds));
+    let rs22 = roundBetfair(recDutch / (e22 * ds));
+    rs00 = Math.max(1, rs00); rs11 = Math.max(1, rs11); rs22 = Math.max(1, rs22);
+    const actualDutch = rs00 + rs11 + rs22;
+
+    const dr00 = rs00 * e00 - actualDutch;
+    const pnlWin = recLayWin - actualDutch;
+    const pnlDraw = -recLiab + dr00;
+    const pnlOther = -recLiab - actualDutch;
+    const liabPct = (recLiab / bankroll * 100).toFixed(1);
+
+    return { name, badgeCls, sbCls, recLay, recLiab, recLayWin, recDutch: actualDutch,
+             rs00, rs11, rs22, pnlWin, pnlDraw, pnlOther, liabPct, btnCls };
+  }
+
+  const strats = [
+    buildStrat('🔵 Conservativa', 'strat-conserv', 'sb-blue', 1, 1.0, 'btn-apply-blue'),
+    buildStrat('🟢 Bilanciata ⭐', 'strat-bilanc', 'sb-green', 1.5, 0.65, 'btn-apply-green'),
+    buildStrat('🟡 Aggressiva', 'strat-aggress', 'sb-amber', 2.5, 0.3, 'btn-apply-amber'),
+  ];
+
+  document.getElementById('strat-cards').innerHTML = strats.map((s,i)=>`
+    <div class="strat ${s.badgeCls}">
+      <div class="strat-head">
+        <div class="strat-title">${s.name}<span class="strat-badge ${s.sbCls}">${i===0?'Basso Rischio':i===1?'CONSIGLIATA':'Alto Profitto'}</span></div>
+        <button class="btn-apply ${s.btnCls}" onclick="applyStrat(${s.recLay},${s.recDutch})">Applica</button>
+      </div>
+      <div class="strat-metrics">
+        <div class="sm"><div class="sm-lbl">Lay Stake</div><div class="sm-val neu">€${s.recLay.toFixed(2)}</div></div>
+        <div class="sm"><div class="sm-lbl">Responsabilità</div><div class="sm-val neg">€${s.recLiab.toFixed(2)}</div></div>
+        <div class="sm"><div class="sm-lbl">Dutch Totale</div><div class="sm-val neu">€${s.recDutch.toFixed(2)}</div></div>
+        <div class="sm"><div class="sm-lbl">% Bankroll</div><div class="sm-val ${parseFloat(s.liabPct)>20?'neg':parseFloat(s.liabPct)>10?'warn':'pos'}">${s.liabPct}%</div></div>
+      </div>
+      <div class="strat-bets">
+        <div class="strat-bet-row">
+          <span class="strat-bet-lbl">🔴 Lay Draw</span>
+          <span class="strat-bet-val" style="color:var(--red)">€${s.recLay.toFixed(2)} @ ${qDraw.toFixed(2)}</span>
+        </div>
+        <div class="strat-bet-row">
+          <span class="strat-bet-lbl">⚪ Back 0-0</span>
+          <span class="strat-bet-val" style="color:var(--text-2)">€${s.rs00.toFixed(2)} @ ${q00.toFixed(2)}</span>
+        </div>
+        <div class="strat-bet-row">
+          <span class="strat-bet-lbl">🟡 Back 1-1</span>
+          <span class="strat-bet-val" style="color:var(--text-2)">€${s.rs11.toFixed(2)} @ ${q11.toFixed(2)}</span>
+        </div>
+        <div class="strat-bet-row">
+          <span class="strat-bet-lbl">🔵 Back 2-2</span>
+          <span class="strat-bet-val" style="color:var(--text-2)">€${s.rs22.toFixed(2)} @ ${q22.toFixed(2)}</span>
+        </div>
+        <div class="sep" style="margin:8px 0"></div>
+        <div class="strat-bet-row">
+          <span class="strat-bet-lbl">✅ Se squadra vince</span>
+          <span class="strat-bet-val" style="color:${s.pnlWin>=0?'var(--green)':'var(--red)'}">${s.pnlWin>=0?'+':''}€${Math.abs(s.pnlWin).toFixed(2)}</span>
+        </div>
+        <div class="strat-bet-row">
+          <span class="strat-bet-lbl">🛡️ Se draw 0-0/1-1/2-2</span>
+          <span class="strat-bet-val" style="color:${s.pnlDraw>=0?'var(--green)':'var(--amber)'}">${s.pnlDraw>=0?'+':''}€${Math.abs(s.pnlDraw).toFixed(2)}</span>
+        </div>
+        <div class="strat-bet-row">
+          <span class="strat-bet-lbl">❌ Se altro pareggio</span>
+          <span class="strat-bet-val" style="color:var(--red)">-€${Math.abs(s.pnlOther).toFixed(2)}</span>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function applyStrat(lay, dutch) {
+  const layEl = document.getElementById('lay_stake');
+  const dutchEl = document.getElementById('dutch_total');
+  layEl.value = lay.toFixed(2);
+  dutchEl.value = dutch.toFixed(2);
+  calculate();
+  document.getElementById('pnl-table').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ========== ADVICE ==========
+function renderAdvice(qDraw, qOver25, q00, q11, q22, pDraw, pOver, p00, breakEven, dutchActual, layLiab, layWin, dr00, covRatio) {
+  const advice = [];
+
+  // Draw odds analysis
+  if (qDraw >= 3.5 && qDraw <= 5.0) {
+    advice.push({ cls:'v-green', ico:'✅', text:`Quota draw ${qDraw.toFixed(2)} — Range <strong>ottimale</strong> per Lay Draw (3.5–5.0). La probabilità implicita di pareggio è ${(pDraw*100).toFixed(1)}%.` });
+  } else if (qDraw < 3.5) {
+    advice.push({ cls:'v-red', ico:'⛔', text:`Quota draw ${qDraw.toFixed(2)} — <strong>Troppo rischiosa</strong> per il Lay. Con draw < 3.5 la responsabilità è alta e la probabilità di pareggio supera il 28%.` });
+  } else if (qDraw > 5.0) {
+    advice.push({ cls:'v-amber', ico:'⚠️', text:`Quota draw alta (${qDraw.toFixed(2)}) — Pareggio improbabile, ma attenzione al <strong>rischio 0-0</strong>. Potrebbe essere una partita tattica.` });
+  }
+
+  // Over 2.5 analysis
+  if (qOver25 < 1.70) {
+    advice.push({ cls:'v-green', ico:'⚽', text:`Over 2.5 a ${qOver25.toFixed(2)} — Alta aspettativa di gol. Il rischio 0-0 è <strong>basso</strong>: puoi ridurre il Dutch sul pareggio 0-0.` });
+  } else if (qOver25 > 2.10) {
+    advice.push({ cls:'v-red', ico:'🧱', text:`Over 2.5 a ${qOver25.toFixed(2)} — Partita che si prevede <strong>bloccata</strong>. Alta probabilità 0-0. Aumenta significativamente il Dutch su 0-0 oppure evita il trade.` });
+  } else {
+    advice.push({ cls:'v-amber', ico:'⚖️', text:`Over 2.5 a ${qOver25.toFixed(2)} — Aspettativa gol nella media. Dutch bilanciato su tutti e tre i risultati.` });
+  }
+
+  // 0-0 specific risk
+  if (q00 < 6.0) {
+    advice.push({ cls:'v-red', ico:'🚨', text:`Quota 0-0 = ${q00.toFixed(2)} (prob. ${(p00*100).toFixed(1)}%) — <strong>Pericolo critico!</strong> Questo è il risultato più pericoloso per il Lay Draw. Il Dutch su 0-0 è fondamentale e dovrebbe avere il peso maggiore.` });
+  } else if (q00 < 8.0) {
+    advice.push({ cls:'v-amber', ico:'⚠️', text:`Quota 0-0 = ${q00.toFixed(2)} — Rischio moderato. Assicurati che la puntata su 0-0 nel Dutch sia adeguata.` });
+  } else {
+    advice.push({ cls:'v-teal', ico:'✅', text:`Quota 0-0 = ${q00.toFixed(2)} — Rischio basso. Le squadre si prevede segneranno.` });
+  }
+
+  // Break-even dutch analysis
+  if (dutchActual >= breakEven * 0.9) {
+    advice.push({ cls:'v-green', ico:'🛡️', text:`<strong>Copertura quasi totale:</strong> con €${dutchActual.toFixed(2)} di Dutch copri quasi interamente la responsabilità del Lay sui draw 0-0/1-1/2-2. Il profitto se vince una squadra è ridotto ma il rischio è minimizzato.` });
+  } else if (dutchActual >= breakEven * 0.5) {
+    advice.push({ cls:'v-amber', ico:'📊', text:`<strong>Copertura parziale (${(dutchActual/breakEven*100).toFixed(0)}%):</strong> il Dutch riduce la perdita sui draw coperti ma non la azzera. Per copertura totale servirebbero €${breakEven.toFixed(2)}.` });
+  } else if (dutchActual > 0) {
+    advice.push({ cls:'v-red', ico:'⚡', text:`<strong>Copertura bassa (${(dutchActual/breakEven*100).toFixed(0)}%):</strong> il Dutch è insufficiente. In caso di 0-0/1-1/2-2 la perdita sarà significativa. Considera di aumentare il Dutch a almeno €${(breakEven*0.6).toFixed(2)}.` });
+  }
+
+  // Combined strategy advice
+  if (layWin > dutchActual && qDraw >= 3.5) {
+    advice.push({ cls:'v-blue', ico:'💡', text:`<strong>Consiglio strategico:</strong> Il Lay Draw è la scommessa principale. Entra <strong>al fischio d'inizio o al 15'-20'</strong> se il match è vivo ma lo 0-0 tiene. In caso di gol, chiudi con il Cash-Out o fai Green Up sulla squadra in vantaggio. Non aspettare il 70' se il match resta bloccato.` });
+  }
+
+  // Timing advice based on draw odds
+  if (qDraw >= 3.5 && qDraw <= 4.5) {
+    advice.push({ cls:'v-purple', ico:'⏱️', text:`<strong>Timing ottimale:</strong> Con draw a ${qDraw.toFixed(2)}, il momento migliore è l'ingresso tra il <strong>15° e il 25° minuto</strong> se il match è vivo. Risparmierai la decadenza iniziale della quota (circa 0.2–0.3 tick) senza perdere il movimento principale in caso di gol.` });
+  }
+
+  document.getElementById('advice-panel').innerHTML = advice.map(a=>`
+    <div class="vd ${a.cls}"><span class="vd-ico">${a.ico}</span><span>${a.text}</span></div>`).join('');
+}
+
+// ========== EVENT LISTENERS ==========
+const inputs = ['bankroll','commission','q_home','q_draw','q_away','q_over25','q_under25',
+                'q_00','q_11','q_22','lay_stake','dutch_total'];
+inputs.forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('input', calculate);
+});
+
+// Init
+calculate();
+</script>
+</body>
+</html>

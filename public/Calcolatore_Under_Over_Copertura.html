@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calcolatore Trading Sportivo — Under 1.5 · 1-1 · Over 2.5 · Direzionale</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+:root {
+  --bg:#080C14; --surface:#0E1521; --surface2:#141D2E;
+  --glass:rgba(255,255,255,0.04); --border:rgba(255,255,255,0.08);
+  --border-hi:rgba(255,255,255,0.16);
+  --gold:#F5A623; --gold-dim:rgba(245,166,35,0.15);
+  --green:#10B981; --green-dim:rgba(16,185,129,0.15);
+  --red:#EF4444; --red-dim:rgba(239,68,68,0.15);
+  --blue:#3B82F6; --blue-dim:rgba(59,130,246,0.15);
+  --amber:#F59E0B; --amber-dim:rgba(245,158,11,0.15);
+  --purple:#8B5CF6; --purple-dim:rgba(139,92,246,0.15);
+  --teal:#14B8A6; --teal-dim:rgba(20,184,166,0.15);
+  --text:#F1F5F9; --text-2:#94A3B8; --text-3:#475569;
+  --r:10px; --r-lg:16px; --shadow:0 4px 24px rgba(0,0,0,0.4);
+}
+body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+  background:var(--bg); color:var(--text); min-height:100vh; font-size:14px; line-height:1.6; }
+body::before { content:''; position:fixed; inset:0;
+  background-image:linear-gradient(rgba(255,255,255,0.015) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,0.015) 1px,transparent 1px);
+  background-size:40px 40px; pointer-events:none; z-index:0; }
+
+/* HEADER */
+.header { position:sticky; top:0; z-index:100; background:rgba(8,12,20,0.94);
+  backdrop-filter:blur(20px); border-bottom:1px solid var(--border); padding:0 24px; }
+.header-inner { max-width:1300px; margin:0 auto; display:flex; align-items:center; gap:14px; height:54px; }
+.logo-mark { width:34px; height:34px; background:linear-gradient(135deg,var(--gold),#D4870A);
+  border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:18px;
+  box-shadow:0 0 18px rgba(245,166,35,0.3); flex-shrink:0; }
+.logo-name { font-size:13px; font-weight:700; }
+.logo-tag  { font-size:10px; color:var(--text-2); letter-spacing:.6px; text-transform:uppercase; }
+.hsp { flex:1; }
+.badge { display:flex; align-items:center; gap:5px; border-radius:99px; padding:4px 11px;
+  font-size:10px; font-weight:700; letter-spacing:.4px; }
+.badge-amber { background:rgba(245,158,11,.12); border:1px solid rgba(245,158,11,.3); color:var(--amber); }
+.badge-red   { background:var(--red-dim); border:1px solid rgba(239,68,68,.3); color:var(--red); }
+.dot { width:6px; height:6px; border-radius:50%; background:currentColor; animation:blink 1.4s ease infinite; }
+@keyframes blink { 0%,100%{opacity:1}50%{opacity:.3} }
+
+/* STEP GUIDE */
+.steps { background:rgba(245,166,35,0.04); border-bottom:1px solid rgba(245,166,35,0.12); padding:0 24px; }
+.steps-inner { max-width:1300px; margin:0 auto; display:flex; align-items:stretch; overflow-x:auto; }
+.step { display:flex; align-items:center; gap:9px; padding:10px 16px;
+  border-right:1px solid rgba(255,255,255,0.06); flex-shrink:0; }
+.step:last-child { border-right:none; }
+.snum { width:22px; height:22px; border-radius:50%; display:flex; align-items:center;
+  justify-content:center; font-size:10px; font-weight:800; flex-shrink:0; }
+.sn1{background:var(--blue-dim);color:var(--blue);}
+.sn2{background:var(--teal-dim);color:var(--teal);}
+.sn3{background:var(--amber-dim);color:var(--amber);}
+.sn4{background:var(--red-dim);color:var(--red);}
+.st  { font-size:11px; font-weight:700; }
+.ss  { font-size:9px; color:var(--text-3); margin-top:1px; }
+.sarr { color:var(--text-3); font-size:16px; padding:0 2px; }
+
+/* LAYOUT */
+.main { max-width:1300px; margin:0 auto; padding:20px 24px 60px; position:relative; z-index:1; }
+.grid2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; align-items:start; }
+.grid2b { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.grid3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:9px; }
+.grid5 { display:grid; grid-template-columns:repeat(5,1fr); gap:9px; }
+
+/* CARDS */
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg);
+  padding:18px 20px; box-shadow:var(--shadow); }
+.card+.card { margin-top:12px; }
+.ct { font-size:11px; font-weight:700; letter-spacing:1.1px; text-transform:uppercase;
+  color:var(--text-2); margin-bottom:14px; display:flex; align-items:center; gap:8px; }
+.cti { width:24px; height:24px; border-radius:7px; display:flex; align-items:center;
+  justify-content:center; font-size:12px; }
+.ic-gold{background:var(--gold-dim);} .ic-green{background:var(--green-dim);}
+.ic-blue{background:var(--blue-dim);} .ic-red{background:var(--red-dim);}
+.ic-amber{background:var(--amber-dim);} .ic-purple{background:var(--purple-dim);}
+.ic-teal{background:var(--teal-dim);}
+
+/* PHASE BLOCKS */
+.phase { border-radius:10px; padding:13px 15px; margin-bottom:10px; }
+.phase:last-child { margin-bottom:0; }
+.ph-blue { background:rgba(59,130,246,0.06); border:1px solid rgba(59,130,246,0.2); }
+.ph-teal { background:rgba(20,184,166,0.06); border:1px solid rgba(20,184,166,0.2); }
+.ph-red  { background:rgba(239,68,68,0.06);  border:1px solid rgba(239,68,68,0.2); }
+.ph-amber{ background:rgba(245,158,11,0.06); border:1px solid rgba(245,158,11,0.2); }
+.ph-head { display:flex; align-items:center; gap:7px; margin-bottom:8px; }
+.ph-badge { font-size:9px; font-weight:800; letter-spacing:.5px; padding:2px 8px; border-radius:99px; }
+.ph-b-blue { background:var(--blue-dim); color:var(--blue); }
+.ph-b-teal { background:var(--teal-dim); color:var(--teal); }
+.ph-b-red  { background:var(--red-dim);  color:var(--red); }
+.ph-b-amber{ background:var(--amber-dim);color:var(--amber); }
+.ph-title  { font-size:12px; font-weight:700; }
+.ph-note   { font-size:10px; color:var(--text-2); line-height:1.6; margin-bottom:9px; }
+
+/* INPUTS */
+.row2 { display:grid; grid-template-columns:1fr 1fr; gap:9px; margin-bottom:10px; }
+.row2:last-child { margin-bottom:0; }
+.field { margin-bottom:10px; }
+.field:last-child { margin-bottom:0; }
+.fl { font-size:10px; font-weight:700; letter-spacing:.7px; text-transform:uppercase;
+  color:var(--text-2); margin-bottom:5px; }
+.inp { width:100%; background:var(--surface2); border:1px solid var(--border-hi);
+  border-radius:var(--r); color:var(--text); font-size:16px; font-weight:700;
+  padding:9px 12px; outline:none; transition:border-color .2s; font-family:inherit; }
+.inp:focus { border-color:var(--gold); box-shadow:0 0 0 3px var(--gold-dim); }
+.inp-blue:focus  { border-color:var(--blue);  box-shadow:0 0 0 3px var(--blue-dim); }
+.inp-teal:focus  { border-color:var(--teal);  box-shadow:0 0 0 3px var(--teal-dim); }
+.inp-amber:focus { border-color:var(--amber); box-shadow:0 0 0 3px var(--amber-dim); }
+.inp-red:focus   { border-color:var(--red);   box-shadow:0 0 0 3px var(--red-dim); }
+.lbl-s { font-size:9px; font-weight:700; letter-spacing:.7px; text-transform:uppercase;
+  color:var(--text-3); }
+input[type=range] { width:100%; height:3px; border-radius:99px; background:var(--border-hi);
+  appearance:none; outline:none; cursor:pointer; margin-top:6px; }
+input[type=range]::-webkit-slider-thumb { appearance:none; width:17px; height:17px;
+  border-radius:50%; background:var(--gold); border:2px solid var(--bg);
+  box-shadow:0 0 8px rgba(245,166,35,.5); cursor:pointer; transition:transform .15s; }
+input[type=range]::-webkit-slider-thumb:hover { transform:scale(1.25); }
+.range-hints { display:flex; justify-content:space-between; font-size:9px; color:var(--text-3); margin-top:4px; }
+
+/* QUOTA MIN BOXES */
+.qmin { border-radius:var(--r-lg); padding:14px 15px; border:2px solid; }
+.qm-ok   { border-color:rgba(16,185,129,.5); background:rgba(16,185,129,.05); }
+.qm-warn { border-color:rgba(245,158,11,.5);  background:rgba(245,158,11,.05); }
+.qm-bad  { border-color:rgba(239,68,68,.5);   background:rgba(239,68,68,.05); }
+.qm-neu  { border-color:var(--border-hi); background:var(--glass); }
+.qm-top  { display:flex; align-items:flex-start; justify-content:space-between; gap:8px; margin-bottom:10px; }
+.qm-name { font-size:10px; font-weight:800; letter-spacing:.7px; text-transform:uppercase; color:var(--text-2); }
+.qm-when { font-size:9px; padding:2px 7px; border-radius:99px; font-weight:700; }
+.qm-nums { display:flex; align-items:center; gap:10px;
+  background:rgba(0,0,0,.25); border-radius:8px; padding:9px 12px; }
+.qm-cur  { text-align:center; }
+.qm-cur .val { font-size:22px; font-weight:800; line-height:1; font-variant-numeric:tabular-nums; }
+.qm-cur .lbl { font-size:9px; color:var(--text-3); margin-top:2px; }
+.qm-arr  { font-size:22px; font-weight:300; color:var(--text-3); }
+.qm-min  { text-align:center; }
+.qm-min .val { font-size:18px; font-weight:800; line-height:1; font-variant-numeric:tabular-nums; }
+.qm-min .lbl { font-size:9px; color:var(--text-3); margin-top:2px; }
+.qm-vrd  { font-size:11px; font-weight:700; margin-top:8px; padding:5px 10px; border-radius:6px; text-align:center; }
+.qvok   { background:rgba(16,185,129,.15); color:#34D399; }
+.qvwarn { background:rgba(245,158,11,.15);  color:#FCD34D; }
+.qvbad  { background:rgba(239,68,68,.15);   color:#F87171; }
+.qvneu  { background:var(--glass); color:var(--text-2); }
+
+/* SCENARIO CARDS */
+.sc { border-radius:var(--r); padding:10px 9px; text-align:center;
+  background:var(--surface2); border:1px solid var(--border); }
+.sc-ico { font-size:18px; margin-bottom:2px; }
+.sc-lbl { font-size:8px; font-weight:700; letter-spacing:.5px; text-transform:uppercase;
+  color:var(--text-3); margin-bottom:5px; line-height:1.4; }
+.sc-val { font-size:17px; font-weight:800; font-variant-numeric:tabular-nums; }
+.sc-sub { font-size:9px; color:var(--text-3); margin-top:2px; }
+.sc.win  { border-color:rgba(16,185,129,.4); background:rgba(16,185,129,.06); }
+.sc.loss { border-color:rgba(239,68,68,.4);  background:rgba(239,68,68,.06); }
+.sc.key  { border-color:rgba(245,166,35,.5); background:rgba(245,166,35,.07); border-width:1.5px; }
+
+/* VERDICTS */
+.vd { border-radius:var(--r); padding:10px 14px; font-size:12px; font-weight:500;
+  display:flex; align-items:flex-start; gap:8px; line-height:1.6; }
+.vd+.vd { margin-top:6px; }
+.v-green  { background:var(--green-dim);  border:1px solid rgba(16,185,129,.3);  color:#34D399; }
+.v-amber  { background:var(--amber-dim);  border:1px solid rgba(245,158,11,.3);  color:#FCD34D; }
+.v-red    { background:var(--red-dim);    border:1px solid rgba(239,68,68,.3);   color:#F87171; }
+.v-blue   { background:var(--blue-dim);   border:1px solid rgba(59,130,246,.3);  color:#93C5FD; }
+.v-purple { background:var(--purple-dim); border:1px solid rgba(139,92,246,.3);  color:#C4B5FD; }
+.v-neu    { background:var(--glass);      border:1px solid var(--border);        color:var(--text-2); }
+
+/* STATS ROWS */
+.srow { display:flex; justify-content:space-between; align-items:center;
+  padding:7px 0; border-bottom:1px solid var(--border); font-size:12px; }
+.srow:last-child { border-bottom:none; }
+.sk { color:var(--text-2); }
+
+/* MISC */
+.info { background:var(--glass); border:1px solid var(--border); border-radius:var(--r);
+  padding:9px 12px; font-size:11px; color:var(--text-2); line-height:1.6; margin-top:10px; }
+.info strong { color:var(--text); }
+.sep { font-size:10px; font-weight:700; letter-spacing:1px; text-transform:uppercase;
+  display:flex; align-items:center; gap:8px; margin:12px 0 9px; }
+.sep::before, .sep::after { content:''; flex:1; height:1px; background:var(--border); }
+.tot-bar { display:flex; justify-content:space-between; align-items:center;
+  background:var(--gold-dim); border:1px solid rgba(245,166,35,.25); border-radius:var(--r);
+  padding:10px 14px; margin-top:10px; }
+
+footer { text-align:center; padding:18px; font-size:11px; color:var(--text-3);
+  border-top:1px solid var(--border); margin-top:36px; }
+
+/* RECOMMENDATION PANEL */
+.rec-panel { display:flex; flex-direction:column; gap:7px; }
+.rec-item { border-radius:9px; padding:10px 13px; border-left:3px solid; display:flex; align-items:flex-start; gap:10px; }
+.ri-green { background:rgba(16,185,129,0.07); border-color:var(--green); }
+.ri-amber { background:rgba(245,158,11,0.07); border-color:var(--amber); }
+.ri-red   { background:rgba(239,68,68,0.07);  border-color:var(--red); }
+.ri-wait  { background:rgba(59,130,246,0.07); border-color:var(--blue); }
+.ri-fire  { background:rgba(245,166,35,0.1);  border-color:var(--gold); }
+.ri-neu   { background:var(--glass);          border-color:var(--text-3); }
+.rec-icon   { font-size:18px; line-height:1; flex-shrink:0; padding-top:1px; }
+.rec-market { font-size:9px; font-weight:800; letter-spacing:.8px; text-transform:uppercase; color:var(--text-3); margin-bottom:1px; }
+.rec-title  { font-size:12px; font-weight:700; margin-bottom:3px; }
+.rec-detail { font-size:10px; color:var(--text-2); line-height:1.55; }
+
+@media(max-width:900px){ .grid2{grid-template-columns:1fr;} .grid5{grid-template-columns:1fr 1fr;} }
+@media(max-width:580px){ .grid2b,.grid3{grid-template-columns:1fr 1fr;} .main{padding:14px 14px 36px;} }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-inner">
+    <div class="logo-mark">⚽</div>
+    <div>
+      <div class="logo-name">Trading Sportivo — Under 1.5 · 1-1 · Over 2.5 · Direzionale</div>
+      <div class="logo-tag">Calcolo quote minime per profitto garantito · Tasse 5% incluse</div>
+    </div>
+    <div class="hsp"></div>
+    <div class="badge badge-amber">🏦 Tasse 5%</div>
+    <div class="badge badge-red"><span class="dot"></span> LIVE READY</div>
+  </div>
+</header>
+
+<div class="steps">
+  <div class="steps-inner">
+    <div class="step">
+      <span class="snum sn1">1</span>
+      <div><div class="st">💙 Under 1.5</div><div class="ss">Pre-match · quota più alta</div></div>
+    </div>
+    <span class="sarr">›</span>
+    <div class="step">
+      <span class="snum sn2">2</span>
+      <div><div class="st">🎯 Esatto 1-1</div><div class="ss">Pre-match o live 0-0</div></div>
+    </div>
+    <span class="sarr">›</span>
+    <div class="step">
+      <span class="snum sn3">3</span>
+      <div><div class="st">🟡 Over 2.5</div><div class="ss">Live 0-0 · 10–20' · quota sale</div></div>
+    </div>
+    <span class="sarr">›</span>
+    <div class="step">
+      <span class="snum sn4">4</span>
+      <div><div class="st">🔴 2-0 o 0-2</div><div class="ss">Live · dopo il 1° gol</div></div>
+    </div>
+    <span class="sarr">›</span>
+    <div class="step">
+      <span style="font-size:13px;">✅</span>
+      <div><div class="st">Tutti i risultati coperti</div><div class="ss">0-0 · 1-0/0-1 · 1-1 · 2-0/0-2 · 3+ gol</div></div>
+    </div>
+  </div>
+</div>
+
+<main class="main">
+<div class="grid2">
+
+<!-- ══════ COLONNA SINISTRA — INPUTS ══════ -->
+<div>
+
+  <!-- OBIETTIVO PROFITTO -->
+  <div class="card" style="border-color:rgba(245,166,35,.3);">
+    <div class="ct"><span class="cti ic-gold">🎯</span> Obiettivo di profitto minimo</div>
+    <div class="field">
+      <div class="fl" style="display:flex;justify-content:space-between;">
+        <span>Profitto minimo garantito per scenario</span>
+        <span style="color:var(--gold);font-weight:800;font-size:14px;" id="d-prof">5%</span>
+      </div>
+      <input type="range" min="0" max="20" step="1" value="5" id="r-prof" oninput="calc()">
+      <div class="range-hints"><span>0% = break-even</span><span>20% = profitto elevato</span></div>
+    </div>
+    <div class="info" style="margin-top:8px;">
+      Le quote minime mostrate a destra garantiscono almeno questa % di profitto
+      su <strong>ogni singolo scenario</strong> rispetto al totale puntato.
+    </div>
+  </div>
+
+  <!-- AUTO-BILANCIA -->
+  <div class="card" style="border-color:rgba(139,92,246,.35);">
+    <div class="ct"><span class="cti ic-purple">⚖️</span> Bilanciamento automatico puntate</div>
+    <p style="font-size:11px;color:var(--text-2);line-height:1.6;margin-bottom:12px;">
+      Calcola S1, S2, S3, S4 in modo che <strong style="color:var(--purple);">la vincita netta sia identica su tutti gli scenari</strong>
+      (1-0/0-1 · 1-1 · 2-0/0-2 · 3+ gol). Usa le quote inserite sopra.
+    </p>
+    <div class="field">
+      <div class="fl lbl-s">Budget totale da ripartire (€)</div>
+      <input class="inp" type="number" id="budget-auto" value="200" min="10" step="10"
+        style="border-color:rgba(139,92,246,.4);"
+        onfocus="this.style.borderColor='var(--purple)';this.style.boxShadow='0 0 0 3px var(--purple-dim)';"
+        onblur="this.style.borderColor='rgba(139,92,246,.4)';this.style.boxShadow='';">
+    </div>
+    <button onclick="autoBilancia()"
+      style="width:100%;padding:11px;border-radius:var(--r);border:none;cursor:pointer;font-family:inherit;
+             font-size:13px;font-weight:700;background:linear-gradient(135deg,var(--purple),#6D28D9);
+             color:#fff;box-shadow:0 0 18px rgba(139,92,246,.35);transition:all .2s;"
+      onmouseover="this.style.boxShadow='0 0 28px rgba(139,92,246,.6)';this.style.transform='translateY(-1px)';"
+      onmouseout="this.style.boxShadow='0 0 18px rgba(139,92,246,.35)';this.style.transform='';">
+      ⚖️ Bilancia automaticamente le puntate
+    </button>
+    <!-- Risultato bilanciamento -->
+    <div id="bal-result" style="display:none;margin-top:11px;"></div>
+    <div class="info" style="margin-top:9px;font-size:10px;">
+      Le puntate vengono arrotondate agli <strong>step Betfair Exchange: minimo €1,00 — passi di €0,50</strong>
+      (es. 1,00 · 1,50 · 2,00 · 2,50…). Il budget reale impegnato può differire leggermente da quello inserito.
+      Il riepilogo mostra i profitti effettivi <em>dopo</em> l'arrotondamento.
+    </div>
+  </div>
+
+  <!-- PRE-MATCH -->
+  <div class="card">
+    <div class="ct"><span class="cti ic-blue">📊</span> Puntate pre-match</div>
+
+    <div class="phase ph-blue">
+      <div class="ph-head">
+        <span class="ph-badge ph-b-blue">STEP 1 · PRE-MATCH</span>
+        <span class="ph-title" style="color:var(--blue);">Under 1.5</span>
+      </div>
+      <p class="ph-note">Piazza prima del fischio. Punta sulla quota più alta che riesci a trovare.</p>
+      <div class="row2">
+        <div class="field" style="margin-bottom:0;">
+          <div class="fl lbl-s">Puntata S1 (€)</div>
+          <input class="inp inp-blue" type="number" id="s1" value="100" min="1" step="1" oninput="calc()">
+        </div>
+        <div class="field" style="margin-bottom:0;">
+          <div class="fl lbl-s">Quota Q1 attuale</div>
+          <input class="inp inp-blue" type="number" id="q1" value="3.50" min="1.01" step="0.01" oninput="calc()">
+        </div>
+      </div>
+    </div>
+
+    <div class="phase ph-teal" style="margin-bottom:0;">
+      <div class="ph-head">
+        <span class="ph-badge ph-b-teal">STEP 2 · PRE-MATCH o LIVE 0-0</span>
+        <span class="ph-title" style="color:var(--teal);">Esatto 1-1</span>
+      </div>
+      <p class="ph-note">Puoi piazzarlo in pre-match oppure aspettare live (a 0-0, la quota può salire).</p>
+      <div class="row2">
+        <div class="field" style="margin-bottom:0;">
+          <div class="fl lbl-s">Puntata S3 (€)</div>
+          <input class="inp inp-teal" type="number" id="s3" value="50" min="1" step="1" oninput="calc()">
+        </div>
+        <div class="field" style="margin-bottom:0;">
+          <div class="fl lbl-s">Quota Q3 attuale</div>
+          <input class="inp inp-teal" type="number" id="q3" value="7.00" min="1.01" step="0.01" oninput="calc()">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LIVE -->
+  <div class="card">
+    <div class="ct"><span class="cti ic-amber">🔴</span> Puntate live</div>
+
+    <div class="phase ph-amber">
+      <div class="ph-head">
+        <span class="ph-badge ph-b-amber">STEP 3 · LIVE 0-0 · 10–20'</span>
+        <span class="ph-title" style="color:var(--amber);">Over 2.5</span>
+      </div>
+      <p class="ph-note">Aspetta 10–20' senza gol: la quota sale. Copre i risultati con 3+ gol (2-1, 1-2, ecc.).</p>
+      <div class="row2">
+        <div class="field" style="margin-bottom:0;">
+          <div class="fl lbl-s">Puntata S2 (€)</div>
+          <input class="inp inp-amber" type="number" id="s2" value="30" min="1" step="1" oninput="calc()">
+        </div>
+        <div class="field" style="margin-bottom:0;">
+          <div class="fl lbl-s">Quota Q2 attuale</div>
+          <input class="inp inp-amber" type="number" id="q2" value="2.80" min="1.01" step="0.01" oninput="calc()">
+        </div>
+      </div>
+    </div>
+
+    <div class="phase ph-red" style="margin-bottom:0;">
+      <div class="ph-head">
+        <span class="ph-badge ph-b-red">STEP 4 · LIVE · DOPO 1° GOL</span>
+        <span class="ph-title" style="color:var(--red);">2-0 (se 1-0) · 0-2 (se 0-1)</span>
+      </div>
+      <p class="ph-note">Entra subito dopo il primo gol. Scegli la direzione in base a chi ha segnato.</p>
+      <div class="row2">
+        <div class="field" style="margin-bottom:0;">
+          <div class="fl lbl-s">Puntata S4 (€)</div>
+          <input class="inp inp-red" type="number" id="s4" value="20" min="1" step="1" oninput="calc()">
+        </div>
+        <div class="field" style="margin-bottom:0;">
+          <div class="fl lbl-s">Quota Q4 attuale</div>
+          <input class="inp inp-red" type="number" id="q4" value="8.00" min="1.01" step="0.01" oninput="calc()">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIEPILOGO PUNTATE -->
+  <div class="card">
+    <div class="ct"><span class="cti ic-gold">📐</span> Riepilogo puntate</div>
+    <div class="srow"><span class="sk">S1 Under 1.5</span><span id="r-s1" style="color:var(--blue);font-weight:700;">—</span></div>
+    <div class="srow"><span class="sk">S3 Esatto 1-1</span><span id="r-s3" style="color:var(--teal);font-weight:700;">—</span></div>
+    <div class="srow"><span class="sk">S2 Over 2.5</span><span id="r-s2" style="color:var(--amber);font-weight:700;">—</span></div>
+    <div class="srow"><span class="sk">S4 Direzionale 2-0/0-2</span><span id="r-s4" style="color:var(--red);font-weight:700;">—</span></div>
+    <div class="tot-bar">
+      <span style="font-size:12px;font-weight:600;">Totale impegnato</span>
+      <span style="font-size:20px;font-weight:800;color:var(--gold);" id="r-tot">—</span>
+    </div>
+    <div class="info" style="margin-top:9px;font-size:10px;">
+      ⚠️ S4 viene piazzata <strong>solo dopo il 1° gol</strong>. Nello scenario 0-0 FT non viene impegnata.
+    </div>
+  </div>
+
+</div><!-- /left -->
+
+<!-- ══════ COLONNA DESTRA — RISULTATI ══════ -->
+<div>
+
+  <!-- RECOMMENDATION ENGINE -->
+  <div class="card" style="border-color:rgba(245,166,35,.35);background:rgba(245,166,35,0.02);">
+    <div class="ct"><span class="cti ic-gold">🔮</span> Consigli intelligenti — quando entrare &nbsp;<span style="font-size:9px;color:var(--text-3);font-weight:400;text-transform:none;letter-spacing:0;">basato su 67 partite Betfair</span></div>
+    <div id="rec-panel" class="rec-panel">
+      <div class="rec-item ri-neu"><span class="rec-icon">⏳</span><div class="rec-body"><div class="rec-title">Inserisci le quote per vedere i consigli →</div></div></div>
+    </div>
+  </div>
+
+  <!-- QUOTE MINIME -->
+  <div class="card" style="border-color:rgba(245,166,35,.3);">
+    <div class="ct"><span class="cti ic-gold">⚠️</span> Quote minime richieste per profitto <span id="prof-label" style="color:var(--gold);margin-left:4px;">5%</span></div>
+    <p style="font-size:11px;color:var(--text-2);line-height:1.6;margin-bottom:12px;">
+      <span style="color:var(--green);">✅ Verde = sei sopra soglia</span> &nbsp;·&nbsp;
+      <span style="color:var(--amber);">⚠️ Giallo = al limite (&lt;1pt sopra)</span> &nbsp;·&nbsp;
+      <span style="color:var(--red);">❌ Rosso = quota troppo bassa</span>
+    </p>
+
+    <div style="display:flex;flex-direction:column;gap:10px;">
+
+      <!-- Q1 -->
+      <div class="qmin qm-neu" id="qb1">
+        <div class="qm-top">
+          <div>
+            <div class="qm-name">💙 Under 1.5 — Q1</div>
+            <div style="font-size:9px;color:var(--text-3);margin-top:2px;">Scenario vincolante: 1-0/0-1 FT (Under vince ma S3+S2+S4 perse)</div>
+          </div>
+          <div class="qm-when" style="background:var(--blue-dim);color:var(--blue);">PRE-MATCH</div>
+        </div>
+        <div class="qm-nums">
+          <div class="qm-cur">
+            <div class="val" id="qc1" style="color:var(--blue);">—</div>
+            <div class="lbl">Attuale Q1</div>
+          </div>
+          <div class="qm-arr" id="qa1">→</div>
+          <div class="qm-min">
+            <div class="val" id="qr1">—</div>
+            <div class="lbl">Min. richiesta</div>
+          </div>
+        </div>
+        <div class="qm-vrd qvneu" id="qv1">Inserisci i dati →</div>
+      </div>
+
+      <!-- Q3 -->
+      <div class="qmin qm-neu" id="qb3">
+        <div class="qm-top">
+          <div>
+            <div class="qm-name">🎯 Esatto 1-1 — Q3</div>
+            <div style="font-size:9px;color:var(--text-3);margin-top:2px;">Scenario: 1-1 FT (S1+S2+S4 perse)</div>
+          </div>
+          <div class="qm-when" style="background:var(--teal-dim);color:var(--teal);">PRE-MATCH · LIVE</div>
+        </div>
+        <div class="qm-nums">
+          <div class="qm-cur">
+            <div class="val" id="qc3" style="color:var(--teal);">—</div>
+            <div class="lbl">Attuale Q3</div>
+          </div>
+          <div class="qm-arr" id="qa3">→</div>
+          <div class="qm-min">
+            <div class="val" id="qr3">—</div>
+            <div class="lbl">Min. richiesta</div>
+          </div>
+        </div>
+        <div class="qm-vrd qvneu" id="qv3">Inserisci i dati →</div>
+      </div>
+
+      <!-- Q2 -->
+      <div class="qmin qm-neu" id="qb2">
+        <div class="qm-top">
+          <div>
+            <div class="qm-name">🟡 Over 2.5 — Q2</div>
+            <div style="font-size:9px;color:var(--text-3);margin-top:2px;">Scenario: 2-1/1-2/3+ FT (S1+S3+S4 perse)</div>
+          </div>
+          <div class="qm-when" style="background:var(--amber-dim);color:var(--amber);">LIVE 0-0</div>
+        </div>
+        <div class="qm-nums">
+          <div class="qm-cur">
+            <div class="val" id="qc2" style="color:var(--amber);">—</div>
+            <div class="lbl">Attuale Q2</div>
+          </div>
+          <div class="qm-arr" id="qa2">→</div>
+          <div class="qm-min">
+            <div class="val" id="qr2">—</div>
+            <div class="lbl">Min. richiesta</div>
+          </div>
+        </div>
+        <div class="qm-vrd qvneu" id="qv2">Inserisci i dati →</div>
+      </div>
+
+      <!-- Q4 -->
+      <div class="qmin qm-neu" id="qb4">
+        <div class="qm-top">
+          <div>
+            <div class="qm-name">🔴 Direzionale 2-0/0-2 — Q4</div>
+            <div style="font-size:9px;color:var(--text-3);margin-top:2px;">Scenario: 2-0/0-2 FT (S1+S3+S2 perse)</div>
+          </div>
+          <div class="qm-when" style="background:var(--red-dim);color:var(--red);">LIVE POST-GOL</div>
+        </div>
+        <div class="qm-nums">
+          <div class="qm-cur">
+            <div class="val" id="qc4" style="color:var(--red);">—</div>
+            <div class="lbl">Attuale Q4</div>
+          </div>
+          <div class="qm-arr" id="qa4">→</div>
+          <div class="qm-min">
+            <div class="val" id="qr4">—</div>
+            <div class="lbl">Min. richiesta</div>
+          </div>
+        </div>
+        <div class="qm-vrd qvneu" id="qv4">Inserisci i dati →</div>
+      </div>
+
+    </div>
+
+    <!-- Verdetto globale -->
+    <div style="margin-top:12px;" id="main-vd">
+      <div class="vd v-neu"><span>⏳</span><span>Inserisci puntate e quote per il verdetto →</span></div>
+    </div>
+  </div>
+
+  <!-- SCENARI P&L -->
+  <div class="card">
+    <div class="ct"><span class="cti ic-green">📊</span> Profitto netto per scenario (tasse 5% incluse)</div>
+
+    <div class="sep" style="color:var(--blue);margin-top:0;">Under 1.5 vince</div>
+    <div class="grid2b" style="gap:9px;margin-bottom:12px;">
+      <div class="sc" id="sc-00">
+        <div class="sc-ico">😴</div>
+        <div class="sc-lbl">0-0 Finale<br><small>S4 non piazzata</small></div>
+        <div class="sc-val" id="sv-00">—</div>
+        <div class="sc-sub" id="ss-00">—</div>
+      </div>
+      <div class="sc" id="sc-10">
+        <div class="sc-ico">⚽</div>
+        <div class="sc-lbl">1-0 / 0-1 Finale<br><small>S4 piazzata e perde</small></div>
+        <div class="sc-val" id="sv-10">—</div>
+        <div class="sc-sub" id="ss-10">—</div>
+      </div>
+    </div>
+
+    <div class="sep" style="color:var(--teal);">Coperture live vincono</div>
+    <div class="grid3" style="gap:9px;margin-bottom:12px;">
+      <div class="sc key" id="sc-11">
+        <div class="sc-ico">🎯</div>
+        <div class="sc-lbl">1-1 Finale<br><small>Esatto 1-1 vince</small></div>
+        <div class="sc-val" id="sv-11">—</div>
+        <div class="sc-sub" id="ss-11">—</div>
+      </div>
+      <div class="sc key" id="sc-20">
+        <div class="sc-ico">🔴</div>
+        <div class="sc-lbl">2-0 / 0-2 Finale<br><small>Direzionale vince</small></div>
+        <div class="sc-val" id="sv-20">—</div>
+        <div class="sc-sub" id="ss-20">—</div>
+      </div>
+      <div class="sc key" id="sc-3p">
+        <div class="sc-ico">💥</div>
+        <div class="sc-lbl">2-1 / 1-2 / 3+ gol<br><small>Over 2.5 vince</small></div>
+        <div class="sc-val" id="sv-3p">—</div>
+        <div class="sc-sub" id="ss-3p">—</div>
+      </div>
+    </div>
+
+    <div class="info" id="best-worst" style="font-size:11px;">—</div>
+  </div>
+
+  <!-- ANALISI -->
+  <div class="card">
+    <div class="ct"><span class="cti ic-blue">🔬</span> Analisi tecnica</div>
+    <div class="srow"><span class="sk">Totale impegnato</span><span class="sv" id="an-tot">—</span></div>
+    <div class="srow"><span class="sk">Ritorno Under 1.5 netto (@Q1)</span><span class="sv" id="an-r1">—</span></div>
+    <div class="srow"><span class="sk">Ritorno Esatto 1-1 netto (@Q3)</span><span class="sv" id="an-r3">—</span></div>
+    <div class="srow"><span class="sk">Ritorno Over 2.5 netto (@Q2)</span><span class="sv" id="an-r2">—</span></div>
+    <div class="srow"><span class="sk">Ritorno Direzionale netto (@Q4)</span><span class="sv" id="an-r4">—</span></div>
+    <div class="srow"><span class="sk">Miglior scenario</span><span class="sv" style="color:var(--green);" id="an-best">—</span></div>
+    <div class="srow"><span class="sk">Peggior scenario</span><span class="sv" style="color:var(--red);" id="an-worst">—</span></div>
+    <div class="srow"><span class="sk">Quote nette effettive Q1 / Q2 / Q3 / Q4</span><span class="sv" id="an-qnet">—</span></div>
+  </div>
+
+  <!-- RIEPILOGO OPERATIVO -->
+  <div class="card" style="border-color:rgba(245,166,35,.25);">
+    <div class="ct"><span class="cti ic-gold">📋</span> Istruzioni operative — cosa fare e quando</div>
+    <div id="riep" style="font-size:12px;color:var(--text-2);">Inserisci puntate e quote →</div>
+  </div>
+
+</div><!-- /right -->
+</div><!-- /grid2 -->
+</main>
+
+<footer>Under 1.5 · Esatto 1-1 · Over 2.5 · Direzionale — Solo uso informativo · Gioca responsabilmente 🎲</footer>
+
+<script>
+/* ═══════════════════════════════════════════════════════
+   COSTANTI
+═══════════════════════════════════════════════════════ */
+const TAX = 0.05;
+const NET = 1 - TAX; // 0.95
+
+const fmt = v => (v >= 0 ? '+' : '') + v.toFixed(2) + ' €';
+const fmtP = (v, tot) => tot > 0 ? ((v/tot)*100).toFixed(1) + '%' : '—';
+const fc  = v => v >= 0 ? 'var(--green)' : 'var(--red)';
+const fsc = v => v >= 0 ? 'win' : 'loss';
+
+/* ═══════════════════════════════════════════════════════
+   AGGIORNA BOX QUOTA MINIMA
+   idSuffix: '1','2','3','4'
+   qCur: quota attuale
+   qMin: quota minima calcolata
+   profitto scenario quando la quota è esattamente qMin
+═══════════════════════════════════════════════════════ */
+function setQbox(id, qCur, qMin, scName) {
+  const box  = document.getElementById('qb' + id);
+  const el   = s => document.getElementById(s + id);
+
+  if (!isFinite(qMin) || qMin <= 1) {
+    box.className = 'qmin qm-neu';
+    el('qc').textContent = qCur.toFixed(2);
+    el('qr').textContent = '—';
+    el('qa').textContent = '→'; el('qa').style.color = '';
+    el('qv').className = 'qm-vrd qvneu';
+    el('qv').textContent = 'Puntata zero';
+    return;
+  }
+
+  el('qc').textContent = qCur.toFixed(2);
+  el('qr').textContent = qMin.toFixed(2);
+  const diff = qCur - qMin;
+
+  if (diff >= 1.0) {
+    box.className = 'qmin qm-ok';
+    el('qa').textContent = '≥'; el('qa').style.color = 'var(--green)';
+    el('qv').className = 'qm-vrd qvok';
+    el('qv').textContent = `✅ +${diff.toFixed(2)} sopra soglia — ${scName} in profitto`;
+  } else if (diff >= 0) {
+    box.className = 'qmin qm-warn';
+    el('qa').textContent = '≈'; el('qa').style.color = 'var(--amber)';
+    el('qv').className = 'qm-vrd qvwarn';
+    el('qv').textContent = `⚠️ Al limite (+${diff.toFixed(2)}) — profitto marginale su ${scName}`;
+  } else {
+    box.className = 'qmin qm-bad';
+    el('qa').textContent = '<'; el('qa').style.color = 'var(--red)';
+    el('qv').className = 'qm-vrd qvbad';
+    el('qv').textContent = `❌ Sotto soglia di ${Math.abs(diff).toFixed(2)} pt — ${scName} in perdita`;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   CALCOLO PRINCIPALE
+═══════════════════════════════════════════════════════ */
+function calc() {
+  /* RACCOMANDAZIONI */
+  updateRec();
+
+  /* INPUT */
+  const S1 = +document.getElementById('s1').value || 0;
+  const S2 = +document.getElementById('s2').value || 0;
+  const S3 = +document.getElementById('s3').value || 0;
+  const S4 = +document.getElementById('s4').value || 0;
+  const Q1 = +document.getElementById('q1').value || 1;
+  const Q2 = +document.getElementById('q2').value || 1;
+  const Q3 = +document.getElementById('q3').value || 1;
+  const Q4 = +document.getElementById('q4').value || 1;
+  const profPct = +document.getElementById('r-prof').value / 100;
+
+  document.getElementById('d-prof').textContent = Math.round(profPct * 100) + '%';
+  document.getElementById('prof-label').textContent = Math.round(profPct * 100) + '%';
+
+  /* TOTALE E TARGET */
+  // S4 viene piazzata solo dopo il gol, ma il totale potenzialmente impegnato è S1+S2+S3+S4
+  const tot = S1 + S2 + S3 + S4;
+  const T   = tot * profPct; // profitto minimo assoluto richiesto per ogni scenario
+
+  /* RIEPILOGO PUNTATE */
+  document.getElementById('r-s1').textContent = `€ ${S1.toFixed(0)} @${Q1.toFixed(2)}`;
+  document.getElementById('r-s3').textContent = `€ ${S3.toFixed(0)} @${Q3.toFixed(2)}`;
+  document.getElementById('r-s2').textContent = `€ ${S2.toFixed(0)} @${Q2.toFixed(2)}`;
+  document.getElementById('r-s4').textContent = `€ ${S4.toFixed(0)} @${Q4.toFixed(2)}`;
+  document.getElementById('r-tot').textContent = `€ ${tot.toFixed(0)}`;
+
+  /* ── SCENARI P&L ─────────────────────────────────
+     Nota su S4: viene piazzata dopo il 1° gol.
+     - 0-0 FT: nessun gol → S4 NON piazzata
+     - 1-0/0-1 FT: gol avviene, S4 piazzata ma perde (non va a 2-0/0-2)
+     - 1-1 FT: gol avviene, S4 piazzata (sulla direzione del 1° gol) ma perde
+     - 2-0/0-2 FT: gol avviene, S4 piazzata e VINCE
+     - 2-1/1-2/3+: gol avviene, S4 piazzata ma perde (Over 2.5 vince)
+  ─────────────────────────────────────────────────── */
+  const sc_00 = S1*(Q1-1)*NET - S3 - S2;              // S4 non piazzata
+  const sc_10 = S1*(Q1-1)*NET - S3 - S2 - S4;         // Under vince, S4 perde
+  const sc_11 = -S1 + S3*(Q3-1)*NET - S2 - S4;        // 1-1 vince, S4 perde
+  const sc_20 = -S1 - S3 - S2 + S4*(Q4-1)*NET;        // Direzionale vince
+  const sc_3p = -S1 - S3 + S2*(Q2-1)*NET - S4;        // Over 2.5 vince, S4 perde
+
+  /* ── QUOTE MINIME (per profitto ≥ T su quel scenario) ─────────
+     Derivazione per ogni scenario:
+
+     Under 1.5: scenario vincolante è 1-0/0-1 (S4 piazzata e perde)
+       S1*(Q1-1)*NET - S3 - S2 - S4 >= T
+       Q1_min = (T + S1 + S2 + S3 + S4) / (S1*NET)
+       (semplificato: ritorno lordo = investimento netto + T)
+       S1*Q1*NET - S1*NET - S3 - S2 - S4 >= T
+       → Q1_min = (S1*NET + S2 + S3 + S4 + T) / (S1*NET)
+
+     Esatto 1-1: scenario 1-1 FT
+       S3*(Q3-1)*NET - S1 - S2 - S4 >= T
+       Q3_min = (S1*NET + S1*(1-NET) + S2 + S4 + T) / (S3*NET) + 1
+       Più semplice: S3*(Q3-1)*NET = S1 + S2 + S4 + T
+       → Q3_min = (S1 + S2 + S4 + T) / (S3*NET) + 1
+
+     Over 2.5: scenario 2-1/1-2/3+ FT
+       S2*(Q2-1)*NET - S1 - S3 - S4 >= T
+       → Q2_min = (S1 + S3 + S4 + T) / (S2*NET) + 1
+
+     Direzionale: scenario 2-0/0-2 FT
+       S4*(Q4-1)*NET - S1 - S3 - S2 >= T
+       → Q4_min = (S1 + S2 + S3 + T) / (S4*NET) + 1
+  ──────────────────────────────────────────────────── */
+  const Q1_min = S1 > 0 ? (S1*NET + S2 + S3 + S4 + T) / (S1*NET) : Infinity;
+  const Q3_min = S3 > 0 ? (S1 + S2 + S4 + T) / (S3*NET) + 1 : Infinity;
+  const Q2_min = S2 > 0 ? (S1 + S3 + S4 + T) / (S2*NET) + 1 : Infinity;
+  const Q4_min = S4 > 0 ? (S1 + S2 + S3 + T) / (S4*NET) + 1 : Infinity;
+
+  /* ── DISPLAY QUOTE MINIME ── */
+  setQbox('1', Q1, Q1_min, '1-0/0-1 FT');
+  setQbox('3', Q3, Q3_min, '1-1 FT');
+  setQbox('2', Q2, Q2_min, '3+ gol FT');
+  setQbox('4', Q4, Q4_min, '2-0/0-2 FT');
+
+  /* ── SCENARI DISPLAY ── */
+  const scs = [
+    ['00', sc_00, '0-0 FT'], ['10', sc_10, '1-0/0-1 FT'],
+    ['11', sc_11, '1-1 FT'], ['20', sc_20, '2-0/0-2 FT'], ['3p', sc_3p, '3+ gol FT']
+  ];
+  scs.forEach(([key, val, lbl]) => {
+    const sv = document.getElementById('sv-' + key);
+    const ss = document.getElementById('ss-' + key);
+    const sc = document.getElementById('sc-' + key);
+    sv.textContent = fmt(val);
+    sv.style.color = fc(val);
+    ss.textContent = tot > 0 ? fmtP(val, tot) + ' sul totale' : '';
+    ss.style.color = val >= 0 ? 'var(--green)' : 'var(--red)';
+    if (key === '11' || key === '20' || key === '3p') {
+      sc.className = 'sc ' + (val >= 0 ? 'key' : 'loss');
+    } else {
+      sc.className = 'sc ' + fsc(val);
+    }
+  });
+
+  /* ── VERDETTO PRINCIPALE ── */
+  const mvDiv = document.getElementById('main-vd');
+  const allOk = [sc_00, sc_10, sc_11, sc_20, sc_3p].every(v => v >= T - 0.01);
+  const allPos = [sc_00, sc_10, sc_11, sc_20, sc_3p].every(v => v >= 0);
+  const preOk  = sc_00 >= 0 && sc_10 >= 0;
+  const negScen = scs.filter(([,v]) => v < 0).map(([,, l]) => l);
+
+  if (tot === 0) {
+    mvDiv.innerHTML = '<div class="vd v-neu"><span>⏳</span><span>Inserisci le puntate →</span></div>';
+  } else if (allOk) {
+    mvDiv.innerHTML = `<div class="vd v-green"><span>✅</span><span><strong>Sistema garantito!</strong> Tutti gli scenari rispettano il target profitto ${Math.round(profPct*100)}%. Ottimo setup.</span></div>`;
+  } else if (allPos) {
+    mvDiv.innerHTML = `<div class="vd v-amber"><span>⚠️</span><span><strong>Tutti gli scenari positivi</strong> ma alcuni sotto il target ${Math.round(profPct*100)}%. Abbassa leggermente il target o migliora le quote live.</span></div>`;
+  } else if (preOk) {
+    mvDiv.innerHTML = `<div class="vd v-amber"><span>⚠️</span><span><strong>Pre-match solido</strong> (0-0 e 1-0/0-1 positivi). Scenari in perdita: <strong>${negScen.join(', ')}</strong>. Attendi quote live migliori.</span></div>`;
+  } else {
+    mvDiv.innerHTML = `<div class="vd v-red"><span>❌</span><span><strong>Setup non bilanciato</strong> — scenari in perdita: <strong>${negScen.join(', ')}</strong>. Rivedi le quote o le puntate.</span></div>`;
+  }
+
+  /* ── ANALISI TECNICA ── */
+  const r1 = S1 * (Q1-1) * NET;
+  const r3 = S3 * (Q3-1) * NET;
+  const r2 = S2 * (Q2-1) * NET;
+  const r4 = S4 * (Q4-1) * NET;
+  document.getElementById('an-tot').textContent = `€ ${tot.toFixed(0)}`;
+  document.getElementById('an-r1').textContent  = `€ ${r1.toFixed(2)}`;
+  document.getElementById('an-r3').textContent  = `€ ${r3.toFixed(2)}`;
+  document.getElementById('an-r2').textContent  = `€ ${r2.toFixed(2)}`;
+  document.getElementById('an-r4').textContent  = `€ ${r4.toFixed(2)}`;
+  const vals  = [sc_00, sc_10, sc_11, sc_20, sc_3p];
+  const names = ['0-0','1-0/0-1','1-1','2-0/0-2','3+ gol'];
+  document.getElementById('an-best').textContent  = `${names[vals.indexOf(Math.max(...vals))]} → ${fmt(Math.max(...vals))}`;
+  document.getElementById('an-worst').textContent = `${names[vals.indexOf(Math.min(...vals))]} → ${fmt(Math.min(...vals))}`;
+  const qn1 = (1+(Q1-1)*NET).toFixed(3);
+  const qn2 = (1+(Q2-1)*NET).toFixed(3);
+  const qn3 = (1+(Q3-1)*NET).toFixed(3);
+  const qn4 = (1+(Q4-1)*NET).toFixed(3);
+  document.getElementById('an-qnet').textContent = `${qn1} / ${qn2} / ${qn3} / ${qn4}`;
+
+  /* ── BEST/WORST BANNER ── */
+  document.getElementById('best-worst').innerHTML = `
+    <strong>Miglior scenario:</strong> ${names[vals.indexOf(Math.max(...vals))]} → <span style="color:var(--green)">${fmt(Math.max(...vals))}</span> (${fmtP(Math.max(...vals),tot)} ROI) &nbsp;·&nbsp;
+    <strong>Peggior scenario:</strong> ${names[vals.indexOf(Math.min(...vals))]} → <span style="color:${fc(Math.min(...vals))}">${fmt(Math.min(...vals))}</span>
+  `;
+
+  /* ── RIEPILOGO OPERATIVO ── */
+  const ok1 = Q1 >= Q1_min;
+  const ok3 = Q3 >= Q3_min;
+  const ok2 = Q2 >= Q2_min;
+  const ok4 = Q4 >= Q4_min;
+
+  const ck = (ok, q, qm) => ok
+    ? `<span style="color:var(--green);">✅ OK — ${(q-qm).toFixed(2)} pt sopra</span>`
+    : `<span style="color:var(--red);">❌ Mancano ${(qm-q).toFixed(2)} pt (min ${qm.toFixed(2)})</span>`;
+
+  document.getElementById('riep').innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:9px;">
+      <div style="background:rgba(59,130,246,0.07);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:11px 14px;border-left:3px solid var(--blue);">
+        <strong style="color:var(--blue);">1️⃣ PRE-MATCH — ora, prima del fischio</strong><br>
+        Punta <strong style="color:var(--blue);">€${S1.toFixed(0)}</strong> su <strong>Under 1.5</strong> @${Q1.toFixed(2)} ${ck(ok1, Q1, Q1_min)}<br>
+        <span style="font-size:10px;color:var(--text-3);">Ritorno netto: €${r1.toFixed(2)}</span>
+      </div>
+      <div style="background:rgba(20,184,166,0.06);border:1px solid rgba(20,184,166,0.2);border-radius:8px;padding:11px 14px;border-left:3px solid var(--teal);">
+        <strong style="color:var(--teal);">2️⃣ ESATTO 1-1 — pre-match o live 0-0</strong><br>
+        Punta <strong style="color:var(--teal);">€${S3.toFixed(0)}</strong> su <strong>Esatto 1-1</strong> @${Q3.toFixed(2)} ${ck(ok3, Q3, Q3_min)}<br>
+        <span style="font-size:10px;color:var(--text-3);">💡 Aspetta live se pensi che la quota salga sopra ${Q3_min.toFixed(2)} · Ritorno netto: €${r3.toFixed(2)}</span>
+      </div>
+      <div style="background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.2);border-radius:8px;padding:11px 14px;border-left:3px solid var(--amber);">
+        <strong style="color:var(--amber);">3️⃣ OVER 2.5 — live a 0-0, intorno al 10'–20'</strong><br>
+        Punta <strong style="color:var(--amber);">€${S2.toFixed(0)}</strong> su <strong>Over 2.5</strong> @${Q2.toFixed(2)} ${ck(ok2, Q2, Q2_min)}<br>
+        <span style="font-size:10px;color:var(--text-3);">Aspetta che la quota salga oltre ${Q2_min.toFixed(2)} prima di entrare · Ritorno netto: €${r2.toFixed(2)}</span>
+      </div>
+      <div style="background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:11px 14px;border-left:3px solid var(--red);">
+        <strong style="color:var(--red);">4️⃣ DIREZIONALE — live, subito dopo il 1° gol</strong><br>
+        ${Q1.toFixed(2).startsWith('1') ? '' : ''}
+        Se segna la <strong>CASA (1-0)</strong>: punta <strong style="color:var(--red);">€${S4.toFixed(0)}</strong> su <strong>2-0</strong> @${Q4.toFixed(2)} ${ck(ok4, Q4, Q4_min)}<br>
+        Se segna l'<strong>OSPITE (0-1)</strong>: punta <strong style="color:var(--red);">€${S4.toFixed(0)}</strong> su <strong>0-2</strong> @${Q4.toFixed(2)} ${ck(ok4, Q4, Q4_min)}<br>
+        <span style="font-size:10px;color:var(--text-3);">Se la quota è sotto ${Q4_min.toFixed(2)} NON entrare · Ritorno netto: €${r4.toFixed(2)}</span>
+      </div>
+      <div style="background:rgba(16,185,129,0.07);border:1px solid rgba(16,185,129,0.2);border-radius:8px;padding:9px 13px;font-size:11px;color:var(--text-2);line-height:1.9;">
+        <strong style="color:var(--green);">📊 Risultati attesi:</strong><br>
+        0-0: <span style="color:${fc(sc_00)};font-weight:700;">${fmt(sc_00)}</span> &nbsp;·&nbsp;
+        1-0/0-1: <span style="color:${fc(sc_10)};font-weight:700;">${fmt(sc_10)}</span> &nbsp;·&nbsp;
+        1-1: <span style="color:${fc(sc_11)};font-weight:700;">${fmt(sc_11)}</span> &nbsp;·&nbsp;
+        2-0/0-2: <span style="color:${fc(sc_20)};font-weight:700;">${fmt(sc_20)}</span> &nbsp;·&nbsp;
+        3+ gol: <span style="color:${fc(sc_3p)};font-weight:700;">${fmt(sc_3p)}</span>
+      </div>
+    </div>
+  `;
+}
+
+/* ═══════════════════════════════════════════════════════
+   AUTO-BILANCIA
+   Obiettivo: sc_10 = sc_11 = sc_20 = sc_3p = K − B
+   Condizione: S1·n1 = S2·n2 = S3·n3 = S4·n4 = K
+   con ni = 1 + (Qi−1)·NET  (quota netta effettiva)
+   K = B / Σ(1/ni)  →  Si = K / ni
+═══════════════════════════════════════════════════════ */
+function autoBilancia() {
+  const Q1 = +document.getElementById('q1').value || 1;
+  const Q2 = +document.getElementById('q2').value || 1;
+  const Q3 = +document.getElementById('q3').value || 1;
+  const Q4 = +document.getElementById('q4').value || 1;
+  const B  = +document.getElementById('budget-auto').value || 200;
+
+  // Quote nette effettive (dopo tassa)
+  const n1 = 1 + (Q1-1)*NET;
+  const n2 = 1 + (Q2-1)*NET;
+  const n3 = 1 + (Q3-1)*NET;
+  const n4 = 1 + (Q4-1)*NET;
+
+  // Somma inversi
+  const sumInv = 1/n1 + 1/n2 + 1/n3 + 1/n4;
+
+  // Profitto bilanciato = K - B  (negativo se sumInv > 1)
+  const K = B / sumInv;
+  const profBil = K - B;
+
+  // Puntate bilanciate (arrotondate a step Betfair: min €1, passi di €0.50)
+  const bfRound = v => Math.max(1.00, Math.round(v * 2) / 2);
+  const S1b = bfRound(K / n1);
+  const S2b = bfRound(K / n2);
+  const S3b = bfRound(K / n3);
+  const S4b = bfRound(K / n4);
+
+  // Imposta i valori nei campi
+  document.getElementById('s1').value = S1b.toFixed(2);
+  document.getElementById('s2').value = S2b.toFixed(2);
+  document.getElementById('s3').value = S3b.toFixed(2);
+  document.getElementById('s4').value = S4b.toFixed(2);
+
+  // Ricalcola profitto reale con puntate arrotondate (Betfair)
+  const Breal   = S1b + S2b + S3b + S4b;
+  const sc10bil = S1b*(Q1-1)*NET - S3b - S2b - S4b;
+  const sc11bil = -S1b + S3b*(Q3-1)*NET - S2b - S4b;
+  const sc20bil = -S1b - S3b - S2b + S4b*(Q4-1)*NET;
+  const sc3pbil = -S1b - S3b + S2b*(Q2-1)*NET - S4b;
+  const profBilReal = Math.min(sc10bil, sc11bil, sc20bil, sc3pbil); // peggior scenario
+
+  // Mostra riepilogo bilanciamento
+  const isProf = profBilReal >= 0;
+  const pct = ((profBilReal / Breal) * 100).toFixed(2);
+  const sc00bil = S1b*(Q1-1)*NET - S3b - S2b; // 0-0: S4 non piazzata
+
+  const balDiv = document.getElementById('bal-result');
+  balDiv.style.display = 'block';
+  balDiv.innerHTML = `
+    <div style="background:rgba(139,92,246,0.07);border:1px solid rgba(139,92,246,0.3);border-radius:10px;padding:12px 14px;">
+      <div style="font-size:11px;font-weight:700;color:var(--purple);margin-bottom:8px;">⚖️ Puntate bilanciate — vincita uguale su ogni scenario</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px;">
+        <div style="background:rgba(59,130,246,0.1);border-radius:7px;padding:7px 10px;">
+          <div style="font-size:9px;color:var(--text-3);text-transform:uppercase;letter-spacing:.7px;">S1 Under 1.5</div>
+          <div style="font-size:17px;font-weight:800;color:var(--blue);">€ ${S1b.toFixed(2)}</div>
+        </div>
+        <div style="background:rgba(20,184,166,0.1);border-radius:7px;padding:7px 10px;">
+          <div style="font-size:9px;color:var(--text-3);text-transform:uppercase;letter-spacing:.7px;">S3 Esatto 1-1</div>
+          <div style="font-size:17px;font-weight:800;color:var(--teal);">€ ${S3b.toFixed(2)}</div>
+        </div>
+        <div style="background:rgba(245,158,11,0.1);border-radius:7px;padding:7px 10px;">
+          <div style="font-size:9px;color:var(--text-3);text-transform:uppercase;letter-spacing:.7px;">S2 Over 2.5</div>
+          <div style="font-size:17px;font-weight:800;color:var(--amber);">€ ${S2b.toFixed(2)}</div>
+        </div>
+        <div style="background:rgba(239,68,68,0.1);border-radius:7px;padding:7px 10px;">
+          <div style="font-size:9px;color:var(--text-3);text-transform:uppercase;letter-spacing:.7px;">S4 Direzionale</div>
+          <div style="font-size:17px;font-weight:800;color:var(--red);">€ ${S4b.toFixed(2)}</div>
+        </div>
+      </div>
+      <div style="background:rgba(0,0,0,0.2);border-radius:8px;padding:9px 12px;font-size:12px;line-height:1.9;">
+        <span style="color:var(--text-2);">Budget richiesto:</span> <strong>€ ${B.toFixed(0)}</strong>
+        <span style="color:var(--text-3);font-size:10px;"> → reale dopo arrotondamento Betfair:</span>
+        <strong style="color:var(--gold);">€ ${Breal.toFixed(2)}</strong><br>
+        <span style="color:var(--text-2);">Profitto netto peggiore tra gli scenari:</span>
+        <strong style="color:${isProf ? 'var(--green)' : 'var(--red)'};">${profBilReal >= 0 ? '+' : ''}${profBilReal.toFixed(2)} € (${pct}%)</strong><br>
+        <span style="color:var(--text-3);font-size:10px;">
+          1-0/0-1: <span style="color:${sc10bil>=0?'var(--green)':'var(--red)'};">${sc10bil>=0?'+':''}${sc10bil.toFixed(2)}€</span> &nbsp;·&nbsp;
+          1-1: <span style="color:${sc11bil>=0?'var(--green)':'var(--red)'};">${sc11bil>=0?'+':''}${sc11bil.toFixed(2)}€</span> &nbsp;·&nbsp;
+          2-0/0-2: <span style="color:${sc20bil>=0?'var(--green)':'var(--red)'};">${sc20bil>=0?'+':''}${sc20bil.toFixed(2)}€</span> &nbsp;·&nbsp;
+          3+ gol: <span style="color:${sc3pbil>=0?'var(--green)':'var(--red)'};">${sc3pbil>=0?'+':''}${sc3pbil.toFixed(2)}€</span>
+        </span><br>
+        <span style="color:var(--text-2);">Scenario 0-0 (S4 non piazzata):</span>
+        <strong style="color:${sc00bil >= 0 ? 'var(--green)' : 'var(--red)'};">${sc00bil >= 0 ? '+' : ''}${sc00bil.toFixed(2)} €</strong>
+      </div>
+      ${!isProf ? `<div style="margin-top:8px;background:var(--red-dim);border:1px solid rgba(239,68,68,.3);border-radius:7px;padding:8px 11px;font-size:11px;color:#F87171;">
+        ⚠️ Con queste quote il sistema è in <strong>perdita bilanciata</strong>. Per andare in profitto servono quote più alte oppure riduci la puntata S4.
+      </div>` : `<div style="margin-top:8px;background:var(--green-dim);border:1px solid rgba(16,185,129,.3);border-radius:7px;padding:8px 11px;font-size:11px;color:#34D399;">
+        ✅ Sistema in profitto su ogni scenario. Le puntate sono state aggiornate nei campi sopra.
+      </div>`}
+    </div>
+  `;
+
+  // Ricalcola tutto con le nuove puntate
+  calc();
+}
+
+/* ═══════════════════════════════════════════════════════
+   RECOMMENDATION ENGINE
+   Basato su analisi di 67 partite reali Betfair Exchange
+   ─────────────────────────────────────────────────────
+   Quote medie storiche con punteggio 0-0:
+   Under 1.5: avg pre-match=4.00 → CALA durante il match
+              min 10'=3.53 · 20'=2.70 · 30'=2.29 · 45'=1.75
+   Over 2.5:  avg pre-match=2.01 → SALE durante 0-0
+              min 10'=2.29 · 20'=2.78 · 30'=3.32 · 45'=5.37 · 60'=11.62
+   Esatto 1-1: avg pre-match=8.40 → SCENDE leggermente (7.1 a 20'), poi RISALE
+              min 20'=7.12 · 30'=7.36 · 45'=8.28 · 60'=11.28
+   2-0/0-2:   avg pre-match=13.37/27.99 · molto volatile
+═══════════════════════════════════════════════════════ */
+function getRec(market, q) {
+  if (!q || q <= 1.01) return {icon:'—', cls:'ri-neu', market:'', title:'Nessuna quota inserita', detail:''};
+  const m = {
+    u15:'💙 Under 1.5',
+    o25:'🟡 Over 2.5',
+    e11:'🎯 Esatto 1-1',
+    e20:'🔴 2-0 / 0-2'
+  };
+  switch(market) {
+    case 'u15':
+      if (q >= 3.50) return {icon:'✅', cls:'ri-green', market:m.u15,
+        title:'Entra SUBITO pre-match',
+        detail:'Quota eccellente (media storica 4.0). La Under 1.5 CALA con ogni minuto: a 20\' sarà ~2.7, a 30\' ~2.3, a 45\' ~1.75. Non aspettare mai il live.'};
+      if (q >= 2.80) return {icon:'✅', cls:'ri-green', market:m.u15,
+        title:'Entra pre-match',
+        detail:'Quota nella norma. Entra prima del fischio — la quota è in discesa costante (calo medio −11% ogni 10 minuti di gioco senza gol).'};
+      if (q >= 2.20) return {icon:'⚠️', cls:'ri-amber', market:m.u15,
+        title:'Entra ora con cautela',
+        detail:'Quota bassa rispetto alla media storica (4.0). Entra comunque ora: aspettare peggiorerà ulteriormente la situazione — la quota scende sempre.'};
+      return {icon:'❌', cls:'ri-red', market:m.u15,
+        title:'Rinuncia — quota troppo bassa',
+        detail:'Media storica Betfair: 4.0. Con questa quota il margine non copre i rischi della strategia. Cerca una partita con Under 1.5 più alta.'};
+
+    case 'o25':
+      if (q >= 5.00) return {icon:'🔥', cls:'ri-fire', market:m.o25,
+        title:'Entra SUBITO — quota eccezionale!',
+        detail:'Storicamente raggiunta solo a 40-50\' con 0-0. Copertura 3+ gol al massimo della convenienza. Entra ora, non aspettare oltre.'};
+      if (q >= 3.00) return {icon:'✅', cls:'ri-green', market:m.o25,
+        title:'Ottima quota — entra ora',
+        detail:'Zona 25-40\' con 0-0 (storico: 3.0≈25\', 3.3≈30\', 4.0≈37\'). Momento ideale per entrare. Vale molto di più del pre-match (avg 2.0).'};
+      if (q >= 2.30) return {icon:'✅', cls:'ri-green', market:m.o25,
+        title:'Buona quota live — entra',
+        detail:'Zona 10-20\' con 0-0. Se vuoi ottimizzare, a 30\' sarà ~3.3. Ma questa è già una buona entry: il pre-match era solo 2.0.'};
+      if (q <= 2.10) return {icon:'⏳', cls:'ri-wait', market:m.o25,
+        title:'Aspetta ancora — troppo vicino al pre-match',
+        detail:'Sei a livello pre-match (avg 2.0). Aspetta almeno 20-30\' senza gol: la quota salirà a 2.8-3.3. Non bruciare il budget live ora.'};
+      return {icon:'⏳', cls:'ri-wait', market:m.o25,
+        title:'Aspetta un po\' di più',
+        detail:'Appena sopra il livello pre-match. A 20-25\' con 0-0 storicamente sarà ~2.7-2.9. Hai ancora qualche minuto per aspettare.'};
+
+    case 'e11':
+      if (q >= 8.00) return {icon:'✅', cls:'ri-green', market:m.e11,
+        title:'Entra subito pre-match',
+        detail:'Quota ottima (media storica 8.4). Live scende leggermente a 20\' (~7.1), poi risale da HT in poi. Il pre-match è il momento migliore.'};
+      if (q >= 7.00) return {icon:'✅', cls:'ri-green', market:m.e11,
+        title:'Entra pre-match — valore nella norma',
+        detail:'Valore accettabile (media storica 8.4). La quota live a 20\' può scendere fino a 7.0, poi risale. Conviene entrare ora pre-match.'};
+      if (q >= 6.00) return {icon:'⚠️', cls:'ri-amber', market:m.e11,
+        title:'Sotto media — valuta di aspettare',
+        detail:'Media storica 8.4. Da HT in poi la quota risale significativamente (8.3 a 45\', 11.3 a 60\'). Potresti aspettare il vivo per trovare una quota migliore.'};
+      return {icon:'❌', cls:'ri-red', market:m.e11,
+        title:'Rinuncia — quota insufficiente',
+        detail:'Troppo bassa rispetto alla media storica di 8.4. Con questo valore il rischio non è giustificato nella strategia.'};
+
+    case 'e20':
+      if (q >= 13.00) return {icon:'✅', cls:'ri-green', market:m.e20,
+        title:'In linea con la media — entra dopo il 1° gol',
+        detail:'Quota nella media storica (13.4 per 2-0). Entra subito dopo il gol: punta il 2-0 se segna la casa, lo 0-2 se segna l\'ospite.'};
+      if (q >= 10.00) return {icon:'✅', cls:'ri-green', market:m.e20,
+        title:'Accettabile — entra dopo il gol',
+        detail:'Leggermente sotto la media (13.4) ma utilizzabile. La quota post-gol dipende dal minuto: più tardi il gol, più alta la quota direzionale.'};
+      if (q >= 7.00) return {icon:'⚠️', cls:'ri-amber', market:m.e20,
+        title:'Quota bassa — valuta se entrare',
+        detail:'Sotto la media storica (13.4). Il rapporto rischio/rendimento è ridotto. Considera di saltare la puntata direzionale o ridurre la quota S4.'};
+      return {icon:'❌', cls:'ri-red', market:m.e20,
+        title:'Non entrare sul direzionale',
+        detail:'Quota insufficiente (media storica 2-0 = 13.4). Con questo valore il direzionale non copre il rischio degli altri mercati persi.'};
+  }
+  return {icon:'—', cls:'ri-neu', market:'', title:'', detail:''};
+}
+
+function updateRec() {
+  const Q1 = +document.getElementById('q1').value || 0;
+  const Q2 = +document.getElementById('q2').value || 0;
+  const Q3 = +document.getElementById('q3').value || 0;
+  const Q4 = +document.getElementById('q4').value || 0;
+
+  const recs = [
+    getRec('u15', Q1),
+    getRec('e11', Q3),
+    getRec('o25', Q2),
+    getRec('e20', Q4),
+  ];
+
+  const panel = document.getElementById('rec-panel');
+  panel.innerHTML = recs.map(r => `
+    <div class="rec-item ${r.cls}">
+      <span class="rec-icon">${r.icon}</span>
+      <div class="rec-body">
+        ${r.market ? `<div class="rec-market">${r.market}</div>` : ''}
+        <div class="rec-title">${r.title}</div>
+        ${r.detail ? `<div class="rec-detail">${r.detail}</div>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+/* INIT */
+calc();
+</script>
+</body>
+</html>

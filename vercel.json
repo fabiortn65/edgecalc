@@ -1,0 +1,11 @@
+{
+  "rewrites": [
+    { "source": "/match-finder-pro", "destination": "/match-finder-pro.html" },
+    { "source": "/calcolatore-lay-dutch", "destination": "/Calcolatore_Lay_Dutch.html" },
+    { "source": "/under-over-copertura", "destination": "/Calcolatore_Under_Over_Copertura.html" },
+    { "source": "/ltd-app", "destination": "/ltd-app.html" },
+    { "source": "/suite", "destination": "/index.html" },
+    { "source": "/suite/(.*)", "destination": "/index.html" },
+    { "source": "/", "destination": "/landing.html" }
+  ]
+}
