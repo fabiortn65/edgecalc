@@ -1,2 +1,8 @@
-{ "source": "/suite", "destination": "/app.html" },
-{ "source": "/suite/(.*)", "destination": "/app.html" },
+{
+  "rewrites": [
+    { "source": "/match-finder-pro", "destination": "/match-finder-pro.html" },
+    { "source": "/calcolatore-lay-dutch", "destination": "/Calcolatore_Lay_Dutch.html" },
+    { "source": "/under-over-copertura", "destination": "/Calcolatore_Under_Over_Copertura.html" },
+    { "source": "/ltd-app", "destination": "/ltd-app.html" }
+  ]
+}
