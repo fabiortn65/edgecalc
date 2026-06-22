@@ -1202,7 +1202,11 @@ export default function App(){
       <div style={{display:"flex",height:"100vh",width:"100%",background:C.bg,fontFamily:"Inter,system-ui,sans-serif",color:C.text,overflow:"hidden",position:"relative"}}>
         <GridBackground/>
         <div style={{width:220,minWidth:220,background:`${C.sidebar}EE`,borderRight:`1px solid ${C.border}`,display:"flex",flexDirection:"column",padding:"0 0 12px 0",overflow:"hidden",position:"relative",zIndex:2,backdropFilter:"blur(8px)"}}>
-          <div style={{padding:"18px 20px 14px",borderBottom:`1px solid ${C.border}`}}>
+          <div style={{padding:"12px 20px",borderBottom:`1px solid ${C.border}`}}>
+            <a href="https://www.laylab.cc" style={{display:"flex",alignItems:"center",gap:6,color:"#6b7fa3",textDecoration:"none",fontSize:11,fontWeight:600,marginBottom:12,transition:"color .15s"}} onMouseOver={e=>e.currentTarget.style.color="#e8edf5"} onMouseOut={e=>e.currentTarget.style.color="#6b7fa3"}>
+              <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7L9 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              Torna alla Home
+            </a>
             <div style={{display:"flex",alignItems:"center",gap:10}}>
               <IconDelta/>
               <div><div style={{fontFamily:"Inter,sans-serif",fontSize:19,fontWeight:800,color:C.accent,letterSpacing:'-0.5px'}}>LayLab</div><div style={{fontSize:10,color:C.textSec,letterSpacing:1.5,textTransform:"uppercase",marginTop:2,fontWeight:500}}>Exchange Tools</div></div>

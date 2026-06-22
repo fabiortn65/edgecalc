@@ -937,6 +937,32 @@
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
   }
+
+  .card-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 11px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+    border: 1px solid transparent;
+    transition: transform 0.15s, opacity 0.15s, box-shadow 0.15s;
+    letter-spacing: 0.2px;
+    margin-top: 4px;
+  }
+  .card-btn:hover { transform: translateY(-1px); opacity: 0.9; }
+  .card-btn-blue   { background: rgba(59,130,246,0.15);  border-color: rgba(59,130,246,0.35);  color: #3b82f6; }
+  .card-btn-green  { background: rgba(52,211,153,0.15);  border-color: rgba(52,211,153,0.35);  color: #34d399; }
+  .card-btn-violet { background: rgba(167,139,250,0.15); border-color: rgba(167,139,250,0.35); color: #a78bfa; }
+  .card-btn-amber  { background: rgba(251,191,36,0.15);  border-color: rgba(251,191,36,0.35);  color: #fbbf24; }
+  .card-btn-blue:hover   { background: rgba(59,130,246,0.25);  box-shadow: 0 4px 16px rgba(59,130,246,0.2); }
+  .card-btn-green:hover  { background: rgba(52,211,153,0.25);  box-shadow: 0 4px 16px rgba(52,211,153,0.2); }
+  .card-btn-violet:hover { background: rgba(167,139,250,0.25); box-shadow: 0 4px 16px rgba(167,139,250,0.2); }
+  .card-btn-amber:hover  { background: rgba(251,191,36,0.25);  box-shadow: 0 4px 16px rgba(251,191,36,0.2); }
+
 </style>
 </head>
 <body>
@@ -1063,7 +1089,7 @@
           </div>
           <div class="card-footer">
             <span class="card-tag">HTML · Standalone</span>
-            <a href="./match-finder-pro.html" class="card-link link-blue">Apri →</a>
+            <a href="/match-finder-pro" class="card-btn card-btn-blue">Apri lo strumento →</a>
           </div>
         </div>
       </div>
@@ -1088,7 +1114,7 @@
           </div>
           <div class="card-footer">
             <span class="card-tag">HTML · Standalone</span>
-            <a href="./Calcolatore_Lay_Dutch.html" class="card-link link-green">Apri →</a>
+            <a href="/calcolatore-lay-dutch" class="card-btn card-btn-green">Apri lo strumento →</a>
           </div>
         </div>
       </div>
@@ -1112,7 +1138,7 @@
           </div>
           <div class="card-footer">
             <span class="card-tag">HTML · Standalone</span>
-            <a href="./Calcolatore_Under_Over_Copertura.html" class="card-link link-violet">Apri →</a>
+            <a href="/under-over-copertura" class="card-btn card-btn-violet">Apri lo strumento →</a>
           </div>
         </div>
       </div>
@@ -1136,7 +1162,7 @@
           </div>
           <div class="card-footer">
             <span class="card-tag">HTML · Standalone</span>
-            <a href="./ltd-app.html" class="card-link link-amber">Apri →</a>
+            <a href="/ltd-app" class="card-btn card-btn-amber">Apri lo strumento →</a>
           </div>
         </div>
       </div>
@@ -1160,7 +1186,7 @@
           </div>
           <div class="card-footer">
             <span class="card-tag">React App · Web</span>
-            <a href="/suite" class="card-link link-violet">Apri la Suite →</a>
+            <a href="/suite" class="card-btn card-btn-violet">Apri la Suite →</a>
           </div>
         </div>
       </div>
