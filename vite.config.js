@@ -7,7 +7,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: 'index.html',
-        app: 'app.html'
+        suite: 'suite.html'
       }
     }
   }
